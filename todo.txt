@@ -1,0 +1,1 @@
+Fix scroll breaking rect positions (either add scroll or recompute rects after scroll).

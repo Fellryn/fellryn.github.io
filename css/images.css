@@ -1,0 +1,106 @@
+.image-placeholder {
+    background: white;
+    position: inherit;
+    margin: auto;
+    margin-top: 0%;
+    width: 100px;
+    height: 100px;
+    display: block;
+    border: solid 0px red;
+    z-index: 10;
+}
+
+.image-container {
+    background: transparent;
+    position: absolute;
+    margin: auto;
+    margin-top: 0%;
+    width: 100px;
+    height: 100px;
+    display: block;
+    border: solid 0px red;
+    z-index: 20;
+    pointer-events: none;
+    
+    /* transform: translateX(-50%) translateY(-50%); */
+}
+
+/* Roller */
+
+.rolling-pin-middle {
+    position: absolute;
+    background: rgb(240, 237, 237);
+    top: 15%;
+    left: 20%;
+    width: 60%;
+    height: 22%;
+    border-radius: 5px;
+    /* border: solid black 2px; */
+    z-index: 3;
+}
+
+.rolling-pin-collision-box  {
+    position: absolute;
+    background: transparent;
+    top: 18.5%;
+    left: 25%;
+    width: 50%;
+    height: 15%;
+    /* border: solid black 2px; */
+    z-index: 5;
+}
+
+
+.rolling-pin-arm {
+    position: absolute;
+    background: gray;
+    top: 26%;
+    left: 64%;
+    width: 5%;
+    height: 35%;
+    rotate: 75deg;
+    border-radius: 2px;
+}
+
+.rolling-pin-handle {
+    position: absolute;
+    background: gray;
+    top: 45%;
+    left: 43%;
+    width: 12%;
+    height: 40%;
+    border-radius: 4px;
+    z-index: 3;
+}
+
+.rolling-pin-connector {
+    position: absolute;
+    background: gray;
+    top: 22%;
+    left: 80%;
+    width: 5%;
+    height: 20%;
+    border-radius: 2px;
+}
+
+.rolling-pin-left {
+    position: absolute;
+    background: wheat;
+    top: 37.5%;
+    left: 5%;
+    width: 20%;
+    height: 20%;
+    border-radius: 50%;
+}
+
+.rolling-pin-right {
+    position: absolute;
+    background: wheat;
+    top: 37.5%;
+    right: 5%;
+    width: 20%;
+    height: 20%;
+    border-radius: 50%;
+}
+
+/* Paintbrush */

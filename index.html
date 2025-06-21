@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/css/site.css" />
+    <link rel="stylesheet" href="/css/animations.css" />
+    <link rel="stylesheet" href="/css/images.css" />
+    <script src="/js/painting.js" defer></script>
+</head>
+
+<body>
+    <div class="ingame-menu">
+        <div class="button main" id="btnPopAllBubbs">
+            Pop All Bubbs
+        </div>
+        <div class="button main" id="btnReset">
+            Reset
+        </div>
+    </div>
+
+    <div class="ingame-menu side-bar">
+        <div class="button main" id="btnColorRed">
+            Red
+        </div>
+        <div class="button main" id="btnColorBlue">
+            Blue
+        </div>
+        <div class="image-placeholder" id="rollingPinPlaceholder">
+            <div class="image-container" id="rollingPin">
+                <div class="rolling-pin-middle active-el"></div>
+                <div class="rolling-pin-collision-box"></div>
+                <div class="rolling-pin-connector"></div>
+                <div class="rolling-pin-handle"></div>
+                <div class="rolling-pin-arm"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-frame-container">
+        <div class="main-frame drop-shadow-subtle" id="mainFrame"></div>
+    </div>
+</body>
+
+</html>

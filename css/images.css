@@ -104,3 +104,62 @@
 }
 
 /* Paintbrush */
+
+.paintbrush-tip {
+    position: absolute;
+    background: rgb(240, 237, 237);
+    top: 15%;
+    left: 30%;
+    width: 40%;
+    height: 30%;
+    border-radius: 5px;
+    /* border: solid black 2px; */
+    z-index: 3;
+}
+
+.paintbrush-gradient {
+    position: absolute;
+    background: linear-gradient(#FFFFFF00, rgb(240, 237, 237));
+    top: 15%;
+    left: 30%;
+    width: 40%;
+    height: 23%;
+    border-radius: 5px 5px 0px 0px;
+    /* border: solid black 2px; */
+    z-index: 4;
+}
+
+.paintbrush-handle {
+    position: absolute;
+    background: rgb(201, 120, 83);
+    top: 45%;
+    left: 43%;
+    width: 12%;
+    height: 40%;
+    border-radius: 4px;
+    z-index: 3;
+}
+
+.paintbrush-accent {
+    position: absolute;
+    background: rgb(204, 112, 89);
+    top: 38%;
+    left: 30%;
+    width: 40%;
+    height: 8%;
+    border-radius: 5px;
+    /* border: solid black 2px; */
+    z-index: 3;
+}
+
+.paintbrush-collision-box {
+    position: absolute;
+    background: invisible;
+    top: 16%;
+    left: 31.5%;
+    width: 37%;
+    height: 12%;
+    border-radius: 5px;
+    /* border: solid black 2px; */
+    z-index: 4;
+}

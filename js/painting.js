@@ -34,7 +34,7 @@ let itemMoveSpeed = 500;
 let itemRect = null;
 const MAX_SATURATION = 10000;
 let saturationLevelPerTick = 2;
-let saturationLevel = MAX_SATURATION;
+// let saturationLevel = MAX_SATURATION;
 let lastMouseX = 0;
 let lastMouseY = 0;
 let lastAngle = 0;
@@ -98,17 +98,41 @@ function setupMainFrame(mainFrame) {
 
 function setupPaintItems() {
     const paintRollerPlaceholder = document.getElementById("rollingPinPlaceholder");
-    const placeHolderActiveEl = paintRollerPlaceholder.querySelector('.active-el');
-    const originalColor = window.getComputedStyle(placeHolderActiveEl).backgroundColor;
-    placeHolderActiveEl.origColor = originalColor;
+    const paintBrushPlaceholder = document.getElementById("paintBrushPlaceholder");
+
+    const allItems = [paintRollerPlaceholder, paintBrushPlaceholder];
+
+    allItems.forEach((i) => {
+        const originalColor = window.getComputedStyle(i.querySelector('.active-el')).backgroundColor;
+        i.querySelector('.active-el').origColor = originalColor;
+        i.saturationLevel = 0;
+    });
+    
+    // const placeHolderActiveEl = paintRollerPlaceholder.querySelector('.active-el');
+    // const originalColor = window.getComputedStyle(placeHolderActiveEl).backgroundColor;
+    // placeHolderActiveEl.origColor = originalColor;
 
     if (paintRollerPlaceholder) {
         paintRollerPlaceholder.addEventListener('click', () => {
 
             if (!item) {
             item = paintRollerPlaceholder.firstElementChild;
-            itemActiveEl = placeHolderActiveEl;
+            itemActiveEl = paintRollerPlaceholder.querySelector('.active-el');
             itemCollisionBox = paintRollerPlaceholder.querySelector('.rolling-pin-collision-box');
+            } 
+            else {
+                item = null;
+            }
+        });
+    }
+
+    if (paintBrushPlaceholder) {
+        paintBrushPlaceholder.addEventListener('click', () => {
+
+            if (!item) {
+            item = paintBrushPlaceholder.firstElementChild;
+            itemActiveEl = paintBrushPlaceholder.querySelector('.active-el');
+            itemCollisionBox = paintBrushPlaceholder.querySelector('.paintbrush-collision-box');
             } 
             else {
                 item = null;
@@ -279,22 +303,22 @@ function checkCollisions() {
             const currDryness = Number(bubble.dataset.recent);
             
             const mixModifier = Math.max(0.7, (currDryness / 10));
-            const saturationModifier = saturationLevel / MAX_SATURATION;
+            const saturationModifier = item.saturationLevel / MAX_SATURATION;
 
             const newColor = mixRgb(bubble.bubbleColor, currentColor, (mixModifier * saturationModifier));
             bubble.bubbleColor = newColor;
             bubble.style.backgroundColor = newColor; 
 
-            if (saturationLevel > 0) {
-                saturationLevel -= saturationLevelPerTick;
-                if (saturationLevel % 1000 == 0)
+            if (item.saturationLevel > 0) {
+                item.saturationLevel -= saturationLevelPerTick;
+                if (item.saturationLevel % 1000 == 0)
                 {
                     // const activeEl = item.querySelector('.active-el');
-                    itemActiveEl.style.backgroundColor = mixRgb(itemActiveEl.origColor, currentColor, saturationLevel / 10000);
+                    itemActiveEl.style.backgroundColor = mixRgb(itemActiveEl.origColor, currentColor, item.saturationLevel / 10000);
                 }
             }
 
-            if (currDryness < 10 && saturationLevel > 0) {
+            if (currDryness < 10 && item.saturationLevel > 0) {
                 bubble.dataset.recent = currDryness + 1;
             }
             // console.log(currDryness);
@@ -353,7 +377,6 @@ function setupRedButton(button) {
     button.addEventListener('click', () => {
         currentColor = "rgb(255,0,0)";
         setColorOnItem(currentColor);
-        saturationLevel = MAX_SATURATION;
     });
 }
 
@@ -361,13 +384,13 @@ function setupBlueButton(button) {
     button.addEventListener('click', () => {
         currentColor = "rgb(0,0,255)";
         setColorOnItem(currentColor);        
-        saturationLevel = 2500;
     });
 }
 
 function setColorOnItem(color) {
     const itemActiveEl = item.querySelector('.active-el');
     itemActiveEl.style.backgroundColor = color;
+    item.saturationLevel = MAX_SATURATION;
 }
 
 function handleMainFrameClick(e) {
@@ -490,7 +513,7 @@ function mixRgb(c1, c2, ratio = 0.5) {
         g: Math.round(g1 * (1 - ratio) + g2 * ratio),
         b: Math.round(b1 * (1 - ratio) + b2 * ratio)
     };
-    return `rgb(${mixedColour.r},${mixedColour.g},${mixedColour.b})`;
+    return rgbToString(mixedColour);
 }
 
 function rgbToString({r, g, b}) {

@@ -1,5 +1,5 @@
 .image-placeholder {
-    background: white;
+    background: transparent;
     position: inherit;
     margin: auto;
     margin-top: 0%;
@@ -25,6 +25,14 @@
     /* transform: translateX(-50%) translateY(-50%); */
 }
 
+.image-container::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.001);
+    filter: drop-shadow(0px 0px 4px black);
+}
+
 /* Roller */
 
 .rolling-pin-middle {
@@ -37,6 +45,7 @@
     border-radius: 5px;
     /* border: solid black 2px; */
     z-index: 3;
+    filter: drop-shadow(0px 0px 3px black);
 }
 
 .rolling-pin-collision-box  {
@@ -47,7 +56,7 @@
     width: 50%;
     height: 15%;
     /* border: solid black 2px; */
-    z-index: 5;
+    z-index: 5; 
 }
 
 
@@ -60,6 +69,7 @@
     height: 35%;
     rotate: 75deg;
     border-radius: 2px;
+    filter: drop-shadow(0px 0px 3px black);   
 }
 
 .rolling-pin-handle {
@@ -71,6 +81,7 @@
     height: 40%;
     border-radius: 4px;
     z-index: 3;
+    filter: drop-shadow(0px 0px 3px black);   
 }
 
 .rolling-pin-connector {
@@ -81,6 +92,7 @@
     width: 5%;
     height: 20%;
     border-radius: 2px;
+    filter: drop-shadow(0px 0px 3px black);   
 }
 
 .rolling-pin-left {
@@ -91,6 +103,7 @@
     width: 20%;
     height: 20%;
     border-radius: 50%;
+    filter: drop-shadow(0px 0px 3px black);   
 }
 
 .rolling-pin-right {
@@ -101,6 +114,7 @@
     width: 20%;
     height: 20%;
     border-radius: 50%;
+    filter: drop-shadow(0px 0px 3px black);   
 }
 
 /* Paintbrush */
@@ -115,6 +129,7 @@
     border-radius: 5px;
     /* border: solid black 2px; */
     z-index: 3;
+    filter: drop-shadow(0px 0px 3px black);   
 }
 
 .paintbrush-gradient {
@@ -126,7 +141,7 @@
     height: 23%;
     border-radius: 5px 5px 0px 0px;
     /* border: solid black 2px; */
-    z-index: 4;
+    z-index: 4; 
 }
 
 .paintbrush-handle {
@@ -138,6 +153,7 @@
     height: 40%;
     border-radius: 4px;
     z-index: 3;
+    filter: drop-shadow(0px 0px 3px black);   
 }
 
 .paintbrush-accent {
@@ -149,7 +165,7 @@
     height: 8%;
     border-radius: 5px;
     /* border: solid black 2px; */
-    z-index: 3;
+    z-index: 3; 
 }
 
 .paintbrush-collision-box {

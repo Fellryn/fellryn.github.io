@@ -1,5 +1,5 @@
 let mouseIsDown = false;
-let level = 50;
+let level = 30;
 const FRAME_SIZE = 600;
 const COVER_TRANSITION_TIME = 250;
 let isChangingLevel = false;
@@ -11,7 +11,7 @@ let mainFrameRect = null;
 let bubbleSize = 0;
 
 let currentColor = "rgb(255,0,0)";
-const defaultBubbleColor = "rgb(0,255,255)";
+const DEFAULT_BUBBLE_COLOR = "rgb(247, 246, 233)";
 
 let lastDrynessCheck = 0;
 const drynessCheckInterval = 500;
@@ -33,7 +33,7 @@ let itemCollisionBox = null;
 let itemMoveSpeed = 500;
 let itemRect = null;
 const MAX_SATURATION = 10000;
-let saturationLevelPerTick = 2;
+let saturationLevelPerTick = 1;
 // let saturationLevel = MAX_SATURATION;
 let lastMouseX = 0;
 let lastMouseY = 0;
@@ -66,7 +66,19 @@ window.addEventListener("load", (e) => {
     if (btnBlue) {
         setupBlueButton(btnBlue);
     }
+
+    checkAllBubbles();
 });
+
+async function checkAllBubbles() {
+    await wait(500);
+    allBubbles.forEach((bubb) => {
+        // const [r, g, b] = bubb.bubbleColor.match(/\d+/g).map(Number);
+        if (bubb.bubbleColor.includes("NaN")) {
+            console.log("this one LYING" + bubb.x, bubb.y)
+        }
+    })
+}
 
 function setupMainFrame(mainFrame) {
     // Setup clicking/dragging events.
@@ -99,13 +111,16 @@ function setupMainFrame(mainFrame) {
 function setupPaintItems() {
     const paintRollerPlaceholder = document.getElementById("rollingPinPlaceholder");
     const paintBrushPlaceholder = document.getElementById("paintBrushPlaceholder");
-
     const allItems = [paintRollerPlaceholder, paintBrushPlaceholder];
+
+    paintRollerPlaceholder.firstElementChild.rotates = true;
+    paintBrushPlaceholder.firstElementChild.rotates = false;
 
     allItems.forEach((i) => {
         const originalColor = window.getComputedStyle(i.querySelector('.active-el')).backgroundColor;
         i.querySelector('.active-el').origColor = originalColor;
-        i.saturationLevel = 0;
+        i.firstElementChild.currColor = originalColor;
+        i.firstElementChild.saturationLevel = 0;
     });
     
     // const placeHolderActiveEl = paintRollerPlaceholder.querySelector('.active-el');
@@ -117,11 +132,14 @@ function setupPaintItems() {
 
             if (!item) {
             item = paintRollerPlaceholder.firstElementChild;
+            item.parentElement.style.zIndex = "30";
             itemActiveEl = paintRollerPlaceholder.querySelector('.active-el');
             itemCollisionBox = paintRollerPlaceholder.querySelector('.rolling-pin-collision-box');
+            currentColor = item.currColor;
+            item.style.willChange = "transform";
             } 
             else {
-                item = null;
+                resetItem(item);
             }
         });
     }
@@ -131,14 +149,28 @@ function setupPaintItems() {
 
             if (!item) {
             item = paintBrushPlaceholder.firstElementChild;
+            item.parentElement.style.zIndex = "30";
             itemActiveEl = paintBrushPlaceholder.querySelector('.active-el');
             itemCollisionBox = paintBrushPlaceholder.querySelector('.paintbrush-collision-box');
+            currentColor = item.currColor;
+            item.style.willChange = "transform";
             } 
             else {
-                item = null;
+                resetItem(item);
             }
         });
     }
+}
+
+function resetItem(itemEl) {
+    itemEl.animate({
+        left: `${itemEl.parentElement.offsetLeft}px`,
+        top: `${itemEl.parentElement.offsetTop}px`,
+        rotate: `0deg`
+    }, { duration: itemMoveSpeed, fill: "forwards", easing: "cubic-bezier(.07,.91,.02,1)" });
+    itemEl.parentElement.style.zIndex = "";
+    itemEl.style.willChange = "";
+    item = null;
 }
 
 async function setupBubbles(mainFrame) {
@@ -175,12 +207,12 @@ async function setupBubbles(mainFrame) {
 
         // const bubbleStyle = window.getComputedStyle(newBubble);
         // const backgroundColor = bubbleStyle.backgroundColor;
-        newBubble.bubbleColor = defaultBubbleColor;
-        
+        newBubble.bubbleColor = DEFAULT_BUBBLE_COLOR;
+        newBubble.style.backgroundColor = newBubble.bubbleColor;
 
+        
         newBubble.style.width = `${size}px`;
         newBubble.style.height = `${size}px`;
-
 
         newBubble.dataset.recent = 0;
 
@@ -201,10 +233,6 @@ async function setupBubbles(mainFrame) {
 
     isChangingLevel = false;
     allBubbles = document.querySelectorAll(".bubble:not(.popped)");
-
-
-
-
 
     bubbleSpatialGrid.clear();
     allBubbles.forEach((bubble) => {
@@ -266,66 +294,6 @@ function tick(timestamp) {
         bubbleRectNeedsUpdate = false;
     }
     requestAnimationFrame(tick);
-}
-
-function checkCollisions() {
-        if (!mouseIsDown || item == null) {
-        return;
-    }
-
-    // const allBubbles = document.querySelectorAll(".bubble:not(.popped)");
-    // const item = document.querySelector('.rolling-pin-middle');
-
-
-    const nearbyBubbles = [];
-    itemRect = itemCollisionBox.getBoundingClientRect();
-    // const mouseGridPosX = Math.trunc(((itemRect.left + (itemRect.width / 2)) - mainFrameRect.left) / bubbleSize) * 100 / 100;
-    // const mouseGridPosY = Math.trunc(((itemRect.top + (itemRect.height / 2)) - mainFrameRect.top) / bubbleSize) * 100 / 100;
-    const mouseGridPosX = Math.floor(((itemRect.left + (itemRect.width / 2)) - mainFrameRect.left) / cellSize);
-    const mouseGridPosY = Math.floor(((itemRect.top + (itemRect.height / 2)) - mainFrameRect.top) / cellSize);
-
-    for (let dx = -1; dx <= 1; dx++) {
-        for (let dy = -1; dy <= 1; dy++) {
-            const key = `${mouseGridPosX + dx},${mouseGridPosY + dy}`;
-            const group = bubbleSpatialGrid.get(key);
-            if (group) {
-                nearbyBubbles.push(...group);
-            }
-        }
-    }
-
-    // console.log("X: " + mouseGridPosX, "Y: " + mouseGridPosY);
-
-    nearbyBubbles.forEach((bubble) => {
-        // bubble.style.backgroundColor = "black";
-        if (checkCollisionOfDivs(itemCollisionBox, bubble)) {
-            
-            const currDryness = Number(bubble.dataset.recent);
-            
-            const mixModifier = Math.max(0.7, (currDryness / 10));
-            const saturationModifier = item.saturationLevel / MAX_SATURATION;
-
-            const newColor = mixRgb(bubble.bubbleColor, currentColor, (mixModifier * saturationModifier));
-            bubble.bubbleColor = newColor;
-            bubble.style.backgroundColor = newColor; 
-
-            if (item.saturationLevel > 0) {
-                item.saturationLevel -= saturationLevelPerTick;
-                if (item.saturationLevel % 1000 == 0)
-                {
-                    // const activeEl = item.querySelector('.active-el');
-                    itemActiveEl.style.backgroundColor = mixRgb(itemActiveEl.origColor, currentColor, item.saturationLevel / 10000);
-                }
-            }
-
-            if (currDryness < 10 && item.saturationLevel > 0) {
-                bubble.dataset.recent = currDryness + 1;
-            }
-            // console.log(currDryness);
-            // console.log(`X: ${bubble.x}, Y: ${bubble.y}`);
-        }
-    });
-        // requestAnimationFrame(checkCollisions);
 }
 
 async function checkPaint() {
@@ -391,6 +359,7 @@ function setColorOnItem(color) {
     const itemActiveEl = item.querySelector('.active-el');
     itemActiveEl.style.backgroundColor = color;
     item.saturationLevel = MAX_SATURATION;
+    item.currColor = color;
 }
 
 function handleMainFrameClick(e) {
@@ -416,11 +385,15 @@ function handleMainFrameMouseMove(e) {
         let y = e.clientY + window.scrollY;
 
         let rotationAngle = lastAngle;
-        if (!mouseIsDown) {
-            rotationAngle = getRotationAngle(lastMouseX, lastMouseY, x, y);
-            rotationAngle = getSmoothedAngle(lastAngle, rotationAngle);
+        if (item.rotates ) {
+            if (!mouseIsDown) {
+                rotationAngle = getRotationAngle(lastMouseX, lastMouseY, x, y);
+                rotationAngle = getSmoothedAngle(lastAngle, rotationAngle);
+            }
+        } else {
+            rotationAngle = -135;
         }
-
+        
 
         item.animate({
             left: `${x - 50}px`,
@@ -462,18 +435,67 @@ function getRandomNumber(min, max) {
     return Math.trunc(randomNum * 100) / 100;
 }
 
-function getRotationAngle(prevX, prevY, currX, currY) {
-    const dx = currX - prevX;
-    const dy = currY - prevY;
-    const angleRadians = Math.atan2(dy, dx);
-    const angleDegrees = angleRadians * (180 / Math.PI);
-    return angleDegrees;
-}
+function checkCollisions() {
+        if (!mouseIsDown || item == null) {
+        return;
+    }
 
-function getSmoothedAngle(prevAngle, newAngle) {
-    let delta = newAngle - prevAngle;
-    delta = ((delta + 180) % 360) - 180;
-    return prevAngle + delta;
+    // const allBubbles = document.querySelectorAll(".bubble:not(.popped)");
+    // const item = document.querySelector('.rolling-pin-middle');
+
+
+    const nearbyBubbles = [];
+    itemRect = itemCollisionBox.getBoundingClientRect();
+    // const mouseGridPosX = Math.trunc(((itemRect.left + (itemRect.width / 2)) - mainFrameRect.left) / bubbleSize) * 100 / 100;
+    // const mouseGridPosY = Math.trunc(((itemRect.top + (itemRect.height / 2)) - mainFrameRect.top) / bubbleSize) * 100 / 100;
+    const mouseGridPosX = Math.floor(((itemRect.left + (itemRect.width / 2)) - mainFrameRect.left) / cellSize);
+    const mouseGridPosY = Math.floor(((itemRect.top + (itemRect.height / 2)) - mainFrameRect.top) / cellSize);
+
+    for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -1; dy <= 1; dy++) {
+            const key = `${mouseGridPosX + dx},${mouseGridPosY + dy}`;
+            const group = bubbleSpatialGrid.get(key);
+            if (group) {
+                nearbyBubbles.push(...group);
+            }
+        }
+    }
+
+    // console.log("X: " + mouseGridPosX, "Y: " + mouseGridPosY);
+
+    nearbyBubbles.forEach((bubble) => {
+        // bubble.style.backgroundColor = "black";
+        if (checkCollisionOfDivs(itemCollisionBox, bubble)) {
+            
+            const currDryness = Number(bubble.dataset.recent);
+            
+            const mixModifier = Math.max(0.7, (currDryness / 10));
+            const saturationModifier = item.saturationLevel / MAX_SATURATION;
+
+            const newColor = mixRgb(bubble.bubbleColor, currentColor, (mixModifier * saturationModifier));
+            if (newColor.includes("NaN")) {
+                console.log("nan detect");
+            }
+            bubble.bubbleColor = newColor;
+            bubble.style.backgroundColor = newColor; 
+
+            if (item.saturationLevel > 0) {
+                item.saturationLevel -= saturationLevelPerTick;
+                if (item.saturationLevel % 1000 == 0)
+                {
+                    // const activeEl = item.querySelector('.active-el');
+                    itemActiveEl.style.backgroundColor = mixRgb(itemActiveEl.origColor, currentColor, item.saturationLevel / 10000);
+                }
+            }
+
+            if (currDryness < 10 && item.saturationLevel > 0) {
+                bubble.dataset.recent = currDryness + 1;
+            }
+            // console.log(currDryness);
+            // console.log(`X: ${bubble.x}, Y: ${bubble.y}`);
+        }
+    });
+        // requestAnimationFrame(checkCollisions);
 }
 
 function checkCollisionOfDivs(div1, div2) {
@@ -504,7 +526,22 @@ function checkCollisionOfDivs(div1, div2) {
     );
 }
 
+function getRotationAngle(prevX, prevY, currX, currY) {
+    const dx = currX - prevX;
+    const dy = currY - prevY;
+    const angleRadians = Math.atan2(dy, dx);
+    const angleDegrees = angleRadians * (180 / Math.PI);
+    return angleDegrees;
+}
+
+function getSmoothedAngle(prevAngle, newAngle) {
+    let delta = newAngle - prevAngle;
+    delta = ((delta + 180) % 360) - 180;
+    return prevAngle + delta;
+}
+
 function mixRgb(c1, c2, ratio = 0.5) {
+
     const { r:r1, g: g1, b: b1} = stringToRgb(c1);
     const { r:r2, g: g2, b: b2} = stringToRgb(c2);
 

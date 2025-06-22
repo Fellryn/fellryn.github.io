@@ -33,6 +33,130 @@
     filter: drop-shadow(0px 0px 4px black);
 }
 
+/* Paintbucket */
+
+.image-placeholder .will-hide {
+    transition: opacity 200ms;
+}
+
+.image-placeholder.paint-bucket:hover .will-hide{
+    opacity: 0.2;
+}
+
+.paint-bucket-back {
+    position: absolute;
+    background: rgb(87, 87, 87);
+    top: 15%;
+    left: 20%;
+    width: 60%;
+    height: 60%;
+    border-radius: 2px;
+    /* border: solid black 2px; */
+    z-index: 3;
+    /* filter: drop-shadow(0px 0px 3px black); */
+    clip-path: path("M -0 10 C 12 0 48 -0 60 10 V 60 C 48 51 10 51 0 60");
+}
+
+.paint-bucket-bottom {
+    position: absolute;
+    background: gray;
+    top: 21%;
+    left: 20%;
+    width: 60%;
+    height: 60%;
+    border-radius: 2px;
+    /* border: solid black 2px; */
+    z-index: 4;
+    /* filter: drop-shadow(0px 0px 3px black); */
+    clip-path: ellipse(50% 13% at 50% 87%);
+}
+
+.paint-bucket-front {
+    position: absolute;
+    /* background: gray; */
+    background: linear-gradient(90deg, gray 0%, lightgray 22%, lightgray 78%, gray 100%);
+    top: 24%;
+    left: 20%;
+    width: 60%;
+    height: 60%;
+    border-radius: 2px;
+    /* border: solid black 2px; */
+    z-index: 9;
+    /* filter: drop-shadow(0px 0px 3px black); */
+    clip-path: path("M 60 50 C 48 60 12 60 0 50 V 0 C 12 9 50 9 60 -0");
+}
+
+.paint-bucket-label {
+    position: absolute;
+    background: red;
+    top: 24%;
+    left: 20%;
+    width: 60%;
+    height: 60%;
+    border-radius: 2px;
+    /* border: solid black 2px; */
+    z-index: 10;
+    /* filter: drop-shadow(0px 0px 3px black); */
+    clip-path: path("M 60 14 C 50 23 12 23 0 14 V 37 C 12 47 48 47 60 37 Z");
+}
+
+.paint-bucket-top {
+    position: absolute;
+    background: darkgray;
+    top: 15%;
+    left: 20%;
+    width: 60%;
+    height: 60%;
+    border-radius: 2px;
+    /* border: solid black 2px; */
+    z-index: 8;
+    /* filter: drop-shadow(0px 0px 3px black); */
+    clip-path: path("M 0 10 C 12 20 48 20 60 10 V 10 C 48 0 12 0 0 10 Z M 5 10 C 21 3 38 3 54 10 C 38 17 20 17 5 10");
+}
+
+.paint-bucket-paint-mask {
+    position: absolute;
+    background: transparent;
+    top: 24%;
+    left: 20%;
+    width: 60%;
+    height: 58%;
+    border-radius: 2px;
+    /* border: solid black 2px; */
+    z-index: 7;
+    /* filter: drop-shadow(0px 0px 3px black); */
+    clip-path: path("M 60 50 C 46 60 13 60 0 50 V 8 C 12 -3 49 -3 60 8");
+
+}
+
+.paint-bucket-paint-top {
+    position: absolute;
+    background: rgb(252, 51, 51);
+    top: 0%;
+    left: 0%;
+    width: 100%;
+    height: 100%;
+    border-radius: 2px;
+    /* border: solid black 2px; */
+    z-index: 5;
+    /* filter: drop-shadow(0px 0px 3px black); */
+    clip-path: path("M 60 47 C 48 57 12 57 0 47 V 8 C 12 -3 49 -3 60 8");
+}
+
+.paint-bucket-paint-side {
+    position: absolute;
+    /* background: indianred; */
+    background: linear-gradient(90deg, indianred 0%, red 22%, red 78%, indianred 100%);
+    top: 0%;
+    left: 0%;
+    width: 100%;
+    height: 100%;
+    border-radius: 2px;
+    /* border: solid black 2px; */
+    z-index: 6;
+    /* filter: drop-shadow(0px 0px 3px black); */
+    clip-path: path("M 60 50 C 48 60 12 60 0 50 v -44 c 12 9 50 9 60 0");
+}
 /* Roller */
 
 .rolling-pin-middle {
@@ -174,6 +298,69 @@
     top: 16%;
     left: 31.5%;
     width: 37%;
+    height: 12%;
+    border-radius: 5px;
+    /* border: solid black 2px; */
+    z-index: 4;
+}
+
+/* Paintbrush Small */
+
+.paintbrush-small-tip {
+    position: absolute;
+    background: rgb(240, 237, 237);
+    top: 15%;
+    left: 39.5%;
+    width: 20%;
+    height: 30%;
+    border-radius: 5px;
+    /* border: solid black 2px; */
+    z-index: 3;
+    filter: drop-shadow(0px 0px 3px black);   
+}
+
+.paintbrush-small-gradient {
+    position: absolute;
+    background: linear-gradient(#FFFFFF00, rgb(240, 237, 237));
+    top: 15%;
+    left: 39.5%;
+    width: 20%;
+    height: 23%;
+    border-radius: 5px 5px 0px 0px;
+    /* border: solid black 2px; */
+    z-index: 4; 
+}
+
+.paintbrush-small-handle {
+    position: absolute;
+    background: rgb(201, 120, 83);
+    top: 45%;
+    left: 43%;
+    width: 12%;
+    height: 40%;
+    border-radius: 4px;
+    z-index: 3;
+    filter: drop-shadow(0px 0px 3px black);   
+}
+
+.paintbrush-small-accent {
+    position: absolute;
+    background: rgb(204, 112, 89);
+    top: 38%;
+    left: 39.5%;
+    width: 20%;
+    height: 8%;
+    border-radius: 5px;
+    /* border: solid black 2px; */
+    z-index: 3; 
+}
+
+.paintbrush-small-collision-box {
+    position: absolute;
+    background: invisible;
+    top: 16%;
+    left: 40.5%;
+    width: 17%;
     height: 12%;
     border-radius: 5px;
     /* border: solid black 2px; */

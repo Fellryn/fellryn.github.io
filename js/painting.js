@@ -10,10 +10,15 @@ let bubbleSize = 0;
 
 let currentColor = "rgb(255,0,0)";
 const DEFAULT_BUBBLE_COLOR = "rgb(247, 246, 233)";
+const COLOR_SIMILARITY_THRESHOLD = 0.9;
+const FULL_PAINT_OFFSET = 0;
+const EMPTY_PAINT_OFFSET = 80;
+const AMOUNT_LOSS_MULTIPLIER = 5;
 
 let lastDrynessCheck = 0;
 const drynessCheckInterval = 500;
 const DRYNESS_COLOR_MODIFIER = 0.02;
+const WETNESS_THRESHOLD_MIX_COLOR = 3;
 
 let lastBubbleCheck = 0;
 const bubbleCheckInterval = 1000;
@@ -26,7 +31,6 @@ let bubbleRectNeedsUpdate = new Map();
 let bubbleSpatialGrid = new Map();
 let cellSize = 50;
 
-let currItem = "rollPin";
 let item = null;
 let itemActiveEl = null;
 let itemCollisionBox = null;
@@ -34,7 +38,7 @@ let itemMoveSpeed = 500;
 let itemRect = null;
 const MAX_SATURATION = 20000;
 let saturationLevelPerTick = 1;
-// let saturationLevel = MAX_SATURATION;
+
 let lastMouseX = 0;
 let lastMouseY = 0;
 let lastAngle = 0;
@@ -42,6 +46,8 @@ let lastAngle = 0;
 let debugCurrX = null;
 let debugCurrY = null;
 let debugCurrColor = null;
+let debugCurrColorOnBrush = null;
+let debugMixRatio = null;
 
 window.addEventListener("load", (e) => {
     mainFrameRef = document.getElementById("mainFrame"); 
@@ -51,10 +57,10 @@ window.addEventListener("load", (e) => {
         setupMainFrame(mainFrame);
     }
 
-    const btnPopAllBubbles = document.getElementById("btnPopAllBubbs");
-    if (btnPopAllBubbles) {
-        setupPopAllBubblesButton(btnPopAllBubbles);
-    }
+    // const btnPopAllBubbles = document.getElementById("btnPopAllBubbs");
+    // if (btnPopAllBubbles) {
+    //     setupPopAllBubblesButton(btnPopAllBubbles);
+    // }
 
     const btnReset = document.getElementById("btnReset");
     if (btnReset) {
@@ -76,6 +82,10 @@ window.addEventListener("load", (e) => {
         setupPainterViewButton(btnPainterView);
     }
 
+    setupScreenResizingListener();
+
+    setupPaints();
+
     // checkAllBubbles();
 });
 
@@ -88,6 +98,26 @@ window.addEventListener("load", (e) => {
 //         }
 //     })
 // }
+
+function setupScreenResizingListener() {
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            doUIRefresh();
+        }, 100);
+    });
+}
+
+function doUIRefresh() {
+    if (mainFrameRef != null) {
+        mainFrameRect = mainFrameRef.getBoundingClientRect();
+    }
+
+    if (allBubbles.length > 0) {
+        bubbleRectNeedsUpdate = true;
+    }
+}
 
 function setupMainFrame(mainFrame) {
     // Setup clicking/dragging events.
@@ -119,13 +149,47 @@ function setupMainFrame(mainFrame) {
 
 }
 
+function setupPaints() {
+    const redPaintPlaceholder = document.getElementById("paintBucketRedPlaceholder");
+
+    const allPaints = [redPaintPlaceholder];
+
+    allPaints.forEach((paint) => {
+        paint.amount = 100;
+        paint.activeEls = redPaintPlaceholder.querySelectorAll(".active-el");
+    });
+
+    if (redPaintPlaceholder) {
+        redPaintPlaceholder.addEventListener('click', () => {
+            // currentColor = "rgb(255,0,0)";
+            // setColorOnItem(currentColor);
+
+            const colorSimilarity = getRgbSimilarity(item.currColor, "rgb(255,0,0)");
+            if (colorSimilarity > COLOR_SIMILARITY_THRESHOLD || item.querySelector(".active-el").origColor == currentColor) {
+
+                const amountLoss = 1 - (item.saturationLevel / MAX_SATURATION);
+                redPaintPlaceholder.amount -= amountLoss * AMOUNT_LOSS_MULTIPLIER;
+                const newTopOffset = Math.abs(((redPaintPlaceholder.amount / 100) * (FULL_PAINT_OFFSET - EMPTY_PAINT_OFFSET)) - (FULL_PAINT_OFFSET - EMPTY_PAINT_OFFSET));
+
+                redPaintPlaceholder.activeEls.forEach((el) => {
+                    el.style.top = newTopOffset + "px";
+                });
+                currentColor =  "rgb(255,0,0)";
+                setColorOnItem(currentColor);
+            }
+        });
+    }
+}
+
 function setupPaintItems() {
     const paintRollerPlaceholder = document.getElementById("rollingPinPlaceholder");
     const paintBrushPlaceholder = document.getElementById("paintBrushPlaceholder");
-    const allItems = [paintRollerPlaceholder, paintBrushPlaceholder];
+    const paintBrushSmallPlaceholder = document.getElementById("paintBrushSmallPlaceholder")
+    const allItems = [paintRollerPlaceholder, paintBrushPlaceholder, paintBrushSmallPlaceholder];
 
     paintRollerPlaceholder.firstElementChild.rotates = true;
     paintBrushPlaceholder.firstElementChild.rotates = false;
+    paintBrushSmallPlaceholder.firstElementChild.rotates = false;
 
     allItems.forEach((i) => {
         const originalColor = window.getComputedStyle(i.querySelector('.active-el')).backgroundColor;
@@ -177,6 +241,26 @@ function setupPaintItems() {
             }
         });
     }
+
+    if (paintBrushSmallPlaceholder) {
+        paintBrushSmallPlaceholder.addEventListener('click', () => {
+
+            if (!item || item != paintBrushSmallPlaceholder.firstElementChild) {
+                if (item) {
+                    resetItem(item);
+                }                
+            item = paintBrushSmallPlaceholder.firstElementChild;
+            item.parentElement.style.zIndex = "30";
+            itemActiveEl = paintBrushSmallPlaceholder.querySelector('.active-el');
+            itemCollisionBox = paintBrushSmallPlaceholder.querySelector('.paintbrush-small-collision-box');
+            currentColor = item.currColor;
+            item.style.willChange = "transform";
+            } 
+            else {
+                resetItem(item);
+            }
+        });
+    }
 }
 
 function resetItem(itemEl) {
@@ -196,7 +280,6 @@ async function setupBubbles(mainFrame) {
         cover.classList.remove("fade-out");
         cover.classList.add("fade-in");
     
-    
         await wait(COVER_TRANSITION_TIME);
     }
     
@@ -212,6 +295,11 @@ async function setupBubbles(mainFrame) {
     coverElement.classList = "cover";
     coverElement.classList.add("fade-out");
     fragment.appendChild(coverElement);
+
+    const halfCoverElement = document.createElement("div");
+    halfCoverElement.classList.add("half-cover");
+    halfCoverElement.classList.add("fade-out");
+    mainFrameRef.prepend(halfCoverElement);
 
     let cellX = 0;
     let cellY = 0; 
@@ -277,6 +365,8 @@ async function setupBubbles(mainFrame) {
     debugCurrX = document.getElementById("debugCurrX");
     debugCurrY = document.getElementById("debugCurrY");
     debugCurrColor = document.getElementById("debugCurrColor");
+    debugCurrColorOnBrush = document.getElementById("debugCurrColorBrush");
+    debugMixRatio = document.getElementById("debugMixRatio");
 }
 
 function checkBubbles() {
@@ -320,6 +410,12 @@ function tick(timestamp) {
         allBubbleRects = new Map(Array.from(allBubbles).map(b => [b, b.getBoundingClientRect()]));
         bubbleRectNeedsUpdate = false;
     }
+
+    // debug ticks.
+    const { r: r, g: g, b:b } = stringToRgb(currentColor);
+    debugCurrColorOnBrush.textContent = `${r},${g},${b}`;
+
+
     requestAnimationFrame(tick);
 }
 
@@ -353,14 +449,14 @@ function checkLevelRules(mainFrame) {
     // }
 }
 
-function setupPopAllBubblesButton(button) {
-    button.addEventListener('click', () => {
-        const allBubbles = document.querySelectorAll('.bubble');
-        allBubbles.forEach((bubble) => {
-            bubble.classList.add("popped");
-        });
-    });
-}
+// function setupPopAllBubblesButton(button) {
+//     button.addEventListener('click', () => {
+//         const allBubbles = document.querySelectorAll('.bubble');
+//         allBubbles.forEach((bubble) => {
+//             bubble.classList.add("popped");
+//         });
+//     });
+// }
 
 function setupResetButton(button, mainFrame) {
     button.addEventListener('click', () => {
@@ -387,16 +483,13 @@ function setupBlueButton(button) {
 function setupPainterViewButton(button) {
     button.isOn = false;
 
-    const halfCoverElement = document.createElement("div");
-    halfCoverElement.classList.add("half-cover");
-    halfCoverElement.classList.add("fade-out");
-    mainFrameRef.prepend(halfCoverElement);
-
+    const halfCoverElement = document.querySelector(".half-cover");
     button.addEventListener('click', () => {
         button.isOn = !button.isOn;
         if (button.isOn) {
             halfCoverElement.classList.remove("fade-out");
             halfCoverElement.classList.add("fade-in");
+            halfCoverElement.style.zIndex = "10";
         }
         else {
             halfCoverElement.classList.add("fade-out");
@@ -441,6 +534,7 @@ function handleMainFrameMouseUp(e) {
 }
 
 function handleMainFrameMouseMove(e) {
+    // Debug stuff.
     if (e.target.classList.contains("bubble"))
     {
         debugCurrX.textContent = e.target.x;
@@ -451,7 +545,6 @@ function handleMainFrameMouseMove(e) {
     }
 
     if (item != null) {
-        // const rollingPin = document.getElementById('rollingPin');
         let x = e.clientX + window.scrollX;
         let y = e.clientY + window.scrollY;
 
@@ -544,11 +637,18 @@ function checkCollisions() {
             const saturationModifier = item.saturationLevel / MAX_SATURATION;
 
             const newColor = mixRgb(bubble.bubbleColor, currentColor, (mixModifier * saturationModifier));
-            if (newColor.includes("NaN")) {
-                console.log("nan detect");
-            }
+            // if (newColor.includes("NaN")) {
+            //     console.log("nan detect");
+            // }
+
             bubble.bubbleColor = newColor;
             bubble.style.backgroundColor = newColor; 
+
+            if (currWetLevel >= WETNESS_THRESHOLD_MIX_COLOR) {
+                const mixRatio = Math.max((1 + (WETNESS_THRESHOLD_MIX_COLOR / 10)) - (currWetLevel / 10), saturationModifier);
+                currentColor = mixRgb(bubble.bubbleColor, currentColor, mixRatio);
+                debugMixRatio.textContent = Math.trunc(mixRatio * 100) / 100;
+            }
 
             if (item.saturationLevel > 0) {
                 item.saturationLevel -= saturationLevelPerTick;
@@ -560,8 +660,7 @@ function checkCollisions() {
             }
 
             if (currWetLevel < 10 && item.saturationLevel > 0) {
-
-                bubble.dataset.recent = currWetLevel + roundToQuarter(saturationModifier);
+                bubble.dataset.recent = currWetLevel + roundToQuarter(saturationModifier / 2);
             }
             // console.log(currDryness);
             // console.log(`X: ${bubble.x}, Y: ${bubble.y}`);
@@ -629,6 +728,18 @@ function mixRgb(c1, c2, ratio = 0.5) {
     return rgbToString(mixedColour);
 }
 
+function getRgbSimilarity(c1, c2) {
+
+    const { r:r1, g: g1, b: b1} = stringToRgb(c1);
+    const { r:r2, g: g2, b: b2} = stringToRgb(c2);
+
+    const rSim = (1 - (Math.abs((r1 - r2)) / 255));
+    const gSim = (1 - (Math.abs((g1 - g2)) / 255));
+    const bSim = (1 - (Math.abs((b1 - b2)) / 255));
+
+    return ((rSim * 0.33) + (gSim * 0.33) + (bSim * 0.33));
+}
+
 function rgbToString({r, g, b}) {
     return `rgb(${r},${g},${b})`;
 }
@@ -643,7 +754,6 @@ function wait(ms) {
 }
 
 function setupDebugPanel() {
-    let debugPanel = document.createElement("div");
-    debugPanel.style.position = "absolute";
+
 
 }

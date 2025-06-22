@@ -33,7 +33,7 @@
     position: absolute;
     width: 600px;
     height: 600px;
-    z-index: 10;
+    z-index: -10;
     pointer-events: none;
 }
 
@@ -47,11 +47,11 @@
     animation-fill-mode: forwards;
 }
 
-.main-framee {
+/* .main-frame {
     animation: rotate-1 2s infinite ease-in-out;
-}
+} */
 
-.main-frame-container {
+/* .main-frame-container {
     perspective-origin: 100% 100%;
     perspective: 1000px;
-}
+} */

@@ -21,7 +21,15 @@
 
 .cover {
     background-color: white;
-    
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.half-cover {
+    background-color: #00000070;
     position: absolute;
     width: 600px;
     height: 600px;

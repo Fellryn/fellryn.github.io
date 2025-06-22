@@ -4,8 +4,6 @@ const FRAME_SIZE = 600;
 const COVER_TRANSITION_TIME = 250;
 let isChangingLevel = false;
 
-
-
 let mainFrameRef = null;
 let mainFrameRect = null;
 let bubbleSize = 0;
@@ -15,10 +13,12 @@ const DEFAULT_BUBBLE_COLOR = "rgb(247, 246, 233)";
 
 let lastDrynessCheck = 0;
 const drynessCheckInterval = 500;
+const DRYNESS_COLOR_MODIFIER = 0.02;
+
 let lastBubbleCheck = 0;
 const bubbleCheckInterval = 1000;
 let lastDrawCheck = 0;
-const drawCheckInterval = 5;
+const drawCheckInterval = 10;
 
 let allBubbles = null;
 let allBubbleRects = null;
@@ -38,6 +38,10 @@ let saturationLevelPerTick = 1;
 let lastMouseX = 0;
 let lastMouseY = 0;
 let lastAngle = 0;
+
+let debugCurrX = null;
+let debugCurrY = null;
+let debugCurrColor = null;
 
 window.addEventListener("load", (e) => {
     mainFrameRef = document.getElementById("mainFrame"); 
@@ -67,18 +71,23 @@ window.addEventListener("load", (e) => {
         setupBlueButton(btnBlue);
     }
 
-    checkAllBubbles();
+    const btnPainterView = document.getElementById("btnPainterView");
+    if (btnPainterView) {
+        setupPainterViewButton(btnPainterView);
+    }
+
+    // checkAllBubbles();
 });
 
-async function checkAllBubbles() {
-    await wait(500);
-    allBubbles.forEach((bubb) => {
-        // const [r, g, b] = bubb.bubbleColor.match(/\d+/g).map(Number);
-        if (bubb.bubbleColor.includes("NaN")) {
-            console.log("this one LYING" + bubb.x, bubb.y)
-        }
-    })
-}
+// async function checkAllBubbles() {
+//     await wait(500);
+//     allBubbles.forEach((bubb) => {
+//         // const [r, g, b] = bubb.bubbleColor.match(/\d+/g).map(Number);
+//         if (bubb.bubbleColor.includes("NaN")) {
+//             console.log("this one LYING" + bubb.x, bubb.y)
+//         }
+//     })
+// }
 
 function setupMainFrame(mainFrame) {
     // Setup clicking/dragging events.
@@ -106,6 +115,8 @@ function setupMainFrame(mainFrame) {
 
     // Setup painting items.
     setupPaintItems();
+
+
 }
 
 function setupPaintItems() {
@@ -130,7 +141,10 @@ function setupPaintItems() {
     if (paintRollerPlaceholder) {
         paintRollerPlaceholder.addEventListener('click', () => {
 
-            if (!item) {
+            if (!item || item != paintRollerPlaceholder.firstElementChild) {
+                if (item) {
+                    resetItem(item);
+                }
             item = paintRollerPlaceholder.firstElementChild;
             item.parentElement.style.zIndex = "30";
             itemActiveEl = paintRollerPlaceholder.querySelector('.active-el');
@@ -147,7 +161,10 @@ function setupPaintItems() {
     if (paintBrushPlaceholder) {
         paintBrushPlaceholder.addEventListener('click', () => {
 
-            if (!item) {
+            if (!item || item != paintBrushPlaceholder.firstElementChild) {
+                if (item) {
+                    resetItem(item);
+                }                
             item = paintBrushPlaceholder.firstElementChild;
             item.parentElement.style.zIndex = "30";
             itemActiveEl = paintBrushPlaceholder.querySelector('.active-el');
@@ -249,7 +266,17 @@ async function setupBubbles(mainFrame) {
     // item = document.querySelector(".rolling-pin-middle");
     bubbleRectNeedsUpdate = true;
     // console.log("is changing level false")
-    console.log(`Created ${totalCount} bubbles`);
+    // console.log(`Created ${totalCount} bubbles`);
+
+    const debugBubbles = document.getElementById("debugBubbles");
+    debugBubbles.textContent = totalCount;
+
+    const debugPerAxis = document.getElementById("debugPerAxis");
+    debugPerAxis.textContent = rowLength;
+
+    debugCurrX = document.getElementById("debugCurrX");
+    debugCurrY = document.getElementById("debugCurrY");
+    debugCurrColor = document.getElementById("debugCurrColor");
 }
 
 function checkBubbles() {
@@ -305,8 +332,10 @@ async function checkPaint() {
             bubble.dataset.recent = 0;
         }
         if (currDryness < 6 && currDryness > 0) {
-            currColor = window.getComputedStyle(bubble).backgroundColor;
-            bubble.style.backgroundColor = mixRgb(currColor, 'rgb(0,0,0)', 0.01);
+            const newColor = mixRgb(bubble.bubbleColor, 'rgb(0,0,0)', DRYNESS_COLOR_MODIFIER); 
+            bubble.bubbleColor = newColor;
+            // currColor = window.getComputedStyle(bubble).backgroundColor;
+            bubble.style.backgroundColor = newColor;
 
         }
     });
@@ -355,11 +384,44 @@ function setupBlueButton(button) {
     });
 }
 
+function setupPainterViewButton(button) {
+    button.isOn = false;
+
+    const halfCoverElement = document.createElement("div");
+    halfCoverElement.classList.add("half-cover");
+    halfCoverElement.classList.add("fade-out");
+    mainFrameRef.prepend(halfCoverElement);
+
+    button.addEventListener('click', () => {
+        button.isOn = !button.isOn;
+        if (button.isOn) {
+            halfCoverElement.classList.remove("fade-out");
+            halfCoverElement.classList.add("fade-in");
+        }
+        else {
+            halfCoverElement.classList.add("fade-out");
+            halfCoverElement.classList.remove("fade-in");            
+        }
+
+
+        // allBubbles.forEach((bubble) => {
+        //     if (button.isOn) {
+        //         bubble.classList.add("painter-view");
+        //     } 
+        //     else {
+        //         bubble.classList.remove("painter-view");
+        //     }
+        // });
+    });
+}
+
 function setColorOnItem(color) {
-    const itemActiveEl = item.querySelector('.active-el');
-    itemActiveEl.style.backgroundColor = color;
-    item.saturationLevel = MAX_SATURATION;
-    item.currColor = color;
+    if (item != null) {
+        const itemActiveEl = item.querySelector('.active-el');
+        itemActiveEl.style.backgroundColor = color;
+        item.saturationLevel = MAX_SATURATION;
+        item.currColor = color;
+    }
 }
 
 function handleMainFrameClick(e) {
@@ -379,6 +441,15 @@ function handleMainFrameMouseUp(e) {
 }
 
 function handleMainFrameMouseMove(e) {
+    if (e.target.classList.contains("bubble"))
+    {
+        debugCurrX.textContent = e.target.x;
+        debugCurrY.textContent = e.target.y;
+        const {r:r, g:g, b:b} = stringToRgb(e.target.bubbleColor);
+        debugCurrColor.textContent = `${r},${g},${b}`
+
+    }
+
     if (item != null) {
         // const rollingPin = document.getElementById('rollingPin');
         let x = e.clientX + window.scrollX;
@@ -467,9 +538,9 @@ function checkCollisions() {
         // bubble.style.backgroundColor = "black";
         if (checkCollisionOfDivs(itemCollisionBox, bubble)) {
             
-            const currDryness = Number(bubble.dataset.recent);
+            const currWetLevel = Number(bubble.dataset.recent);
             
-            const mixModifier = Math.max(0.7, (currDryness / 10));
+            const mixModifier = Math.max(0.7, (currWetLevel / 10));
             const saturationModifier = item.saturationLevel / MAX_SATURATION;
 
             const newColor = mixRgb(bubble.bubbleColor, currentColor, (mixModifier * saturationModifier));
@@ -484,12 +555,13 @@ function checkCollisions() {
                 if (item.saturationLevel % 1000 == 0)
                 {
                     // const activeEl = item.querySelector('.active-el');
-                    itemActiveEl.style.backgroundColor = mixRgb(itemActiveEl.origColor, currentColor, item.saturationLevel / 10000);
+                    itemActiveEl.style.backgroundColor = mixRgb(itemActiveEl.origColor, currentColor, item.saturationLevel / MAX_SATURATION);
                 }
             }
 
-            if (currDryness < 10 && item.saturationLevel > 0) {
-                bubble.dataset.recent = currDryness + 1;
+            if (currWetLevel < 10 && item.saturationLevel > 0) {
+
+                bubble.dataset.recent = currWetLevel + roundToQuarter(saturationModifier);
             }
             // console.log(currDryness);
             // console.log(`X: ${bubble.x}, Y: ${bubble.y}`);
@@ -540,6 +612,10 @@ function getSmoothedAngle(prevAngle, newAngle) {
     return prevAngle + delta;
 }
 
+function roundToQuarter(num) {
+    return Math.round(num / 0.25) * 0.25;
+}
+
 function mixRgb(c1, c2, ratio = 0.5) {
 
     const { r:r1, g: g1, b: b1} = stringToRgb(c1);
@@ -566,3 +642,8 @@ function wait(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function setupDebugPanel() {
+    let debugPanel = document.createElement("div");
+    debugPanel.style.position = "absolute";
+
+}

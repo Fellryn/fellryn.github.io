@@ -51,7 +51,10 @@ let debugMixRatio = null;
 
 let hasTextToDisplay = false;
 let lastTextUpdate = 0;
-const TEXT_UPDATE_INTERVAL = 125;
+const TEXT_UPDATE_INTERVAL = 150;
+let doTextPauseForCycles = 0;
+const TEXT_PAUSE_CYCLES_LONG = 3;
+const TEXT_PAUSE_CYCLES_SHORT = 1;
 let talkTextArea = null;
 let currTextLength = 0;
 let currTextIndex = 0;
@@ -118,13 +121,27 @@ function setupTalkArea() {
     hasTextToDisplay = true;
 }
 
-function updateText() {
-    const testString = "Hello my good man! I see you want to paint today! Well, you're in luck, we have a wall right here you can paint!";
+async function updateText() {
+    const testString = "Hello my good fellow! I see you want to paint today! Well, you're in luck, we have a wall you can paint right here!";
     const words = testString.split(" ");
     currTextLength = words.length;
     // currTextLength = testString.length;
     if (currTextIndex < currTextLength) {
-        talkTextArea.textContent += words[currTextIndex++] + " ";
+        const newEl = document.createElement("span");
+        newEl.classList.add("fade-in");
+        newEl.textContent = words[currTextIndex++] + " ";
+        talkTextArea.appendChild(newEl);
+
+        // Check if word contains punctation and do delay if so.
+        // The tick counts down for a few beats rather than sending the next word.
+        const punctation = words[currTextIndex - 1].match(/[.,!?;:]/);
+        if (punctation?.includes(",")) {
+            doTextPauseForCycles = TEXT_PAUSE_CYCLES_SHORT;
+        } 
+        else if (punctation) {
+            doTextPauseForCycles = TEXT_PAUSE_CYCLES_LONG;
+        }
+        // talkTextArea.innerHTML += `<span class="fade-in">${words[currTextIndex++]} </span>`;
     }
 }
 
@@ -443,7 +460,12 @@ function tick(timestamp) {
 
     if (hasTextToDisplay) {
         if (timestamp - lastTextUpdate >= TEXT_UPDATE_INTERVAL) {
-            updateText();
+            if (doTextPauseForCycles > 0) {
+                doTextPauseForCycles--;
+            } 
+            else {
+                updateText();
+            }
             lastTextUpdate = timestamp;
         }
     }

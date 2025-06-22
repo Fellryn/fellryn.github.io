@@ -43,6 +43,10 @@
     opacity: 0.2;
 }
 
+.paint-side-bar .active-el {
+    transition: top 150ms ease-out;
+}
+
 .paint-bucket-back {
     position: absolute;
     background: rgb(87, 87, 87);
@@ -172,6 +176,18 @@
     filter: drop-shadow(0px 0px 3px black);
 }
 
+.rolling-pin-middle-gradient {
+    position: absolute;
+    background: linear-gradient(0deg, #00000040 2%, #ffffff00 20%, #ffffff00 80%, #00000040 98%);
+    top: 15%;
+    left: 20%;
+    width: 60%;
+    height: 22%;
+    border-radius: 5px;
+    /* border: solid black 2px; */
+    z-index: 4;
+}
+
 .rolling-pin-collision-box  {
     position: absolute;
     background: transparent;
@@ -258,7 +274,7 @@
 
 .paintbrush-gradient {
     position: absolute;
-    background: linear-gradient(#FFFFFF00, rgb(240, 237, 237));
+    background: linear-gradient(#00000030, rgb(240, 237, 237));
     top: 15%;
     left: 30%;
     width: 40%;
@@ -272,7 +288,7 @@
     position: absolute;
     background: rgb(201, 120, 83);
     top: 45%;
-    left: 43%;
+    left: 44%;
     width: 12%;
     height: 40%;
     border-radius: 4px;
@@ -321,7 +337,7 @@
 
 .paintbrush-small-gradient {
     position: absolute;
-    background: linear-gradient(#FFFFFF00, rgb(240, 237, 237));
+    background: linear-gradient(#00000030, rgb(240, 237, 237));
     top: 15%;
     left: 39.5%;
     width: 20%;
@@ -335,7 +351,7 @@
     position: absolute;
     background: rgb(201, 120, 83);
     top: 45%;
-    left: 43%;
+    left: 44%;
     width: 12%;
     height: 40%;
     border-radius: 4px;

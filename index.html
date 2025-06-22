@@ -12,92 +12,103 @@
 </head>
 
 <body>
-<div class="main-container">
-    <div class="ingame-menu">
-        <div class="button main" id="btnReset">
-            Reset
+    <div class="main-container">
+        <div class="ingame-menu">
+            <div class="button main" id="btnReset">
+                Reset
+            </div>
+            <div class="button main" id="btnDebugMenu">
+                Debug
+            </div>
         </div>
-    </div>
 
-    <div class="column-container">
-        <div class="row">
-            <div class="ingame-menu tools-side-bar">
-                <div class="button main" id="btnColorRed">
-                    Red
-                </div>
-                <div class="button main" id="btnColorBlue">
-                    Blue
-                </div>
-                <div class="button main" id="btnPainterView">
-                    Painter View
-                </div>
-                <div class="image-placeholder" id="rollingPinPlaceholder">
-                    <div class="image-container" id="rollingPin">
-                        <div class="rolling-pin-middle active-el"></div>
-                        <div class="rolling-pin-collision-box"></div>
-                        <div class="rolling-pin-connector"></div>
-                        <div class="rolling-pin-handle"></div>
-                        <div class="rolling-pin-arm"></div>
+        <div class="column-container">
+            <div class="row">
+                <div class="ingame-menu tools-side-bar">
+                    <div class="button main" id="btnColorRed">
+                        Red
+                    </div>
+                    <div class="button main" id="btnColorBlue">
+                        Blue
+                    </div>
+                    <div class="button main" id="btnPainterView">
+                        Painter View
+                    </div>
+                    <div class="image-placeholder" id="rollingPinPlaceholder">
+                        <div class="image-container" id="rollingPin">
+                            <div class="rolling-pin-middle active-el"></div>
+                            <div class="rolling-pin-middle-gradient"></div>
+                            <div class="rolling-pin-collision-box"></div>
+                            <div class="rolling-pin-connector"></div>
+                            <div class="rolling-pin-handle"></div>
+                            <div class="rolling-pin-arm"></div>
+                        </div>
+                    </div>
+                    <div class="image-placeholder" id="paintBrushPlaceholder">
+                        <div class="image-container" id="paintBrush">
+                            <div class="paintbrush-tip active-el"></div>
+                            <div class="paintbrush-collision-box"></div>
+                            <div class="paintbrush-accent"></div>
+                            <div class="paintbrush-handle"></div>
+                            <div class="paintbrush-gradient"></div>
+                        </div>
+                    </div>
+                    <div class="image-placeholder" id="paintBrushSmallPlaceholder">
+                        <div class="image-container" id="paintBrushSmall">
+                            <div class="paintbrush-small-tip active-el"></div>
+                            <div class="paintbrush-small-collision-box"></div>
+                            <div class="paintbrush-small-accent"></div>
+                            <div class="paintbrush-small-handle"></div>
+                            <div class="paintbrush-small-gradient"></div>
+                        </div>
                     </div>
                 </div>
-                <div class="image-placeholder" id="paintBrushPlaceholder">
-                    <div class="image-container" id="paintBrush">
-                        <div class="paintbrush-tip active-el"></div>
-                        <div class="paintbrush-collision-box"></div>
-                        <div class="paintbrush-accent"></div>
-                        <div class="paintbrush-handle"></div>
-                        <div class="paintbrush-gradient"></div>
-                    </div>
-                </div>
-                <div class="image-placeholder" id="paintBrushSmallPlaceholder">
-                    <div class="image-container" id="paintBrushSmall">
-                        <div class="paintbrush-small-tip active-el"></div>
-                        <div class="paintbrush-small-collision-box"></div>
-                        <div class="paintbrush-small-accent"></div>
-                        <div class="paintbrush-small-handle"></div>
-                        <div class="paintbrush-small-gradient"></div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="main-frame-container">
-                <div class="main-frame drop-shadow-subtle" id="mainFrame"></div>
-            </div>
+                <div class="main-frame-container">
+                    <div class="main-frame drop-shadow-subtle" id="mainFrame"></div>
+                </div>
 
-            <div class="ingame-menu paint-side-bar">
-                <div class="image-placeholder paint-bucket" id="paintBucketRedPlaceholder">
-                    <div class="image-container" id="paintBucketRed">
-                        <div class="paint-bucket-back"></div>
-                        <div class="paint-bucket-front will-hide"></div>
-                        <div class="paint-bucket-bottom"></div>
-                        <div class="paint-bucket-top will-hide"></div>
-                        <div class="paint-bucket-label will-hide"></div>
-                        <div class="paint-bucket-paint-mask">
-                            <div class="paint-bucket-paint-top active-el"></div>
-                            <div class="paint-bucket-paint-side active-el"></div>
+                <div class="ingame-menu paint-side-bar">
+                    <div class="image-placeholder paint-bucket" id="paintBucketRedPlaceholder">
+                        <div class="image-container" id="paintBucketRed">
+                            <div class="paint-bucket-back"></div>
+                            <div class="paint-bucket-front will-hide"></div>
+                            <div class="paint-bucket-bottom"></div>
+                            <div class="paint-bucket-top will-hide"></div>
+                            <div class="paint-bucket-label will-hide"></div>
+                            <div class="paint-bucket-paint-mask">
+                                <div class="paint-bucket-paint-top active-el"></div>
+                                <div class="paint-bucket-paint-side active-el"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    
+
+        <div class="talk-container">
+            <div class="talk-panel">
+                <div class="talk-graphic">test</div>
+                <div class="talk-text" id="talkText"></div>
+                <div>test</div>
+            </div>
+        </div>
 
 
 
-    <div class="debug-panel-container">
-        <div class="debug-panel">
 
-            <span class="name-span">Bubbles: <span id="debugBubbles" class="value-span">5</span></span>
-            <span class="name-span">Per Axis: <span id="debugPerAxis" class="value-span">5</span></span>
-            <span class="name-span">X: <span id="debugCurrX" class="value-span">5</span></span>
-            <span class="name-span">Y: <span id="debugCurrY" class="value-span">5</span></span>
-            <span class="name-span">Color: <span id="debugCurrColor" class="value-span">5</span></span>
-            <span class="name-span">Color B: <span id="debugCurrColorBrush" class="value-span">5</span></span>
-            <span class="name-span">Mix Ratio: <span id="debugMixRatio" class="value-span">5</span></span>
+        <div class="debug-panel-container" id="debugMenu">
+            <div class="debug-panel">
+                <span class="name-span">Bubbles: <span id="debugBubbles" class="value-span">5</span></span>
+                <span class="name-span">Per Axis: <span id="debugPerAxis" class="value-span">5</span></span>
+                <span class="name-span">X: <span id="debugCurrX" class="value-span">5</span></span>
+                <span class="name-span">Y: <span id="debugCurrY" class="value-span">5</span></span>
+                <span class="name-span">Color: <span id="debugCurrColor" class="value-span">5</span></span>
+                <span class="name-span">Color B: <span id="debugCurrColorBrush" class="value-span">5</span></span>
+                <span class="name-span">Mix Ratio: <span id="debugMixRatio" class="value-span">5</span></span>
+            </div>
         </div>
     </div>
-</div>
 </body>
 
 </html>

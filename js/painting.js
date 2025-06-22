@@ -16,14 +16,14 @@ const EMPTY_PAINT_OFFSET = 80;
 const AMOUNT_LOSS_MULTIPLIER = 5;
 
 let lastDrynessCheck = 0;
-const drynessCheckInterval = 500;
+const DRYNESS_CHECK_INTERVAL = 500;
 const DRYNESS_COLOR_MODIFIER = 0.02;
 const WETNESS_THRESHOLD_MIX_COLOR = 3;
 
 let lastBubbleCheck = 0;
-const bubbleCheckInterval = 1000;
+const BUBBLE_CHECK_INTERVAL = 1000;
 let lastDrawCheck = 0;
-const drawCheckInterval = 10;
+const DRAW_CHECK_INTERVAL = 10;
 
 let allBubbles = null;
 let allBubbleRects = null;
@@ -49,6 +49,13 @@ let debugCurrColor = null;
 let debugCurrColorOnBrush = null;
 let debugMixRatio = null;
 
+let hasTextToDisplay = false;
+let lastTextUpdate = 0;
+const TEXT_UPDATE_INTERVAL = 125;
+let talkTextArea = null;
+let currTextLength = 0;
+let currTextIndex = 0;
+
 window.addEventListener("load", (e) => {
     mainFrameRef = document.getElementById("mainFrame"); 
     mainFrameRect = mainFrameRef.getBoundingClientRect();
@@ -65,6 +72,11 @@ window.addEventListener("load", (e) => {
     const btnReset = document.getElementById("btnReset");
     if (btnReset) {
         setupResetButton(btnReset, mainFrame);
+    }
+
+    const btnDebugMenu = document.getElementById("btnDebugMenu");
+    if (btnDebugMenu) {
+        setupDebugButton(btnDebugMenu);
     }
 
     const btnRed = document.getElementById("btnColorRed");
@@ -86,6 +98,8 @@ window.addEventListener("load", (e) => {
 
     setupPaints();
 
+    setupTalkArea();
+
     // checkAllBubbles();
 });
 
@@ -98,6 +112,21 @@ window.addEventListener("load", (e) => {
 //         }
 //     })
 // }
+
+function setupTalkArea() {
+    talkTextArea = document.getElementById("talkText");
+    hasTextToDisplay = true;
+}
+
+function updateText() {
+    const testString = "Hello my good man! I see you want to paint today! Well, you're in luck, we have a wall right here you can paint!";
+    const words = testString.split(" ");
+    currTextLength = words.length;
+    // currTextLength = testString.length;
+    if (currTextIndex < currTextLength) {
+        talkTextArea.textContent += words[currTextIndex++] + " ";
+    }
+}
 
 function setupScreenResizingListener() {
     let resizeTimeout;
@@ -179,6 +208,7 @@ function setupPaints() {
             }
         });
     }
+    
 }
 
 function setupPaintItems() {
@@ -388,18 +418,18 @@ function checkBubbles() {
 }
 
 function tick(timestamp) {
-    if (timestamp - lastDrawCheck >= drawCheckInterval) {
+    if (timestamp - lastDrawCheck >= DRAW_CHECK_INTERVAL) {
         checkCollisions();
         lastDrawCheck = timestamp;
     }
 
-    if (timestamp - lastDrynessCheck >= drynessCheckInterval) {
+    if (timestamp - lastDrynessCheck >= DRYNESS_CHECK_INTERVAL) {
         // console.log("fired check");
         checkPaint();
         lastDrynessCheck = timestamp;
     }
 
-    if (timestamp - lastBubbleCheck >= bubbleCheckInterval) {
+    if (timestamp - lastBubbleCheck >= BUBBLE_CHECK_INTERVAL) {
         // console.log("fired bubble check");
         checkBubbles();
         lastBubbleCheck = timestamp;
@@ -409,6 +439,13 @@ function tick(timestamp) {
 
         allBubbleRects = new Map(Array.from(allBubbles).map(b => [b, b.getBoundingClientRect()]));
         bubbleRectNeedsUpdate = false;
+    }
+
+    if (hasTextToDisplay) {
+        if (timestamp - lastTextUpdate >= TEXT_UPDATE_INTERVAL) {
+            updateText();
+            lastTextUpdate = timestamp;
+        }
     }
 
     // debug ticks.
@@ -464,6 +501,23 @@ function setupResetButton(button, mainFrame) {
 
        setupBubbles(mainFrame); 
     });
+}
+
+function setupDebugButton(button) {
+    const debugMenu = document.getElementById("debugMenu");
+    button.addEventListener('click', () => {
+        if (debugMenu) {
+            const visState = debugMenu.style.visibility;
+            if (visState === "") {
+                debugMenu.style.visibility = "visible";
+            } 
+            else {
+                debugMenu.style.visibility = "";
+            }
+        }
+    });
+
+
 }
 
 function setupRedButton(button) {

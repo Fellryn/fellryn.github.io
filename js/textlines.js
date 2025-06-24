@@ -49,6 +49,11 @@ export class TextLines {
         return this.lines[this.currentLineIndex].wordIndex;
     }
 
+    get isLastLine() {
+        return this.currentLineIndex == this.lines.length - 1;
+    }
+
+
 
 }
 

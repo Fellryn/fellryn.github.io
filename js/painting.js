@@ -145,10 +145,15 @@ function updateText() {
     const lineIndex = levelOneText.lineIndex;
     const wordIndex = levelOneText.wordIndex;
 
-    if (levelOneText.lines[lineIndex].isLastWord) { 
+    if (levelOneText.lines[lineIndex].isLastWord && levelOneText.isLastLine) { 
         hasTextToDisplay = false;
         return;
-    }
+    } 
+    else if (levelOneText.lines[lineIndex].isLastWord && !levelOneText.isLastLine) {
+        talkTextArea.innerHTML = "";
+        levelOneText.currentLineIndex++;
+        return;
+    } 
 
     const hasPause = levelOneText.lines[lineIndex].checkPunctuationPause();
     doTextPauseForCycles = hasPause;

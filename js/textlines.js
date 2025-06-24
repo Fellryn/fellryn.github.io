@@ -1,0 +1,77 @@
+export class TextLines {
+    // Current line that is going to be displayed.
+    currentLineIndex = 0;
+    // All the lines that will be said in the level/interaction.
+    // Always pass lines as an array, even if there is only one line.
+    lines = [];
+    // The next line that will be displayed after the current one finishes as a set of 
+    // integers. E.g. [0, 1, 2, 3, 4]
+    linesNext = [];
+    // Denotes which line is a question, and which line to go to for either yes or no.
+    questionAtLine = [];
+
+    constructor(startIndex, lines, questionAtLine = null, linesNext = -1) {
+        this.currentLineIndex = startIndex;
+        this.lines = lines;
+        if (linesNext === -1) {
+            let i = 1;
+            this.linesNext = [];
+            for (const l of lines) {
+                this.linesNext.push(i++);
+            }
+            this.linesNext[this.linesNext.length - 1] = -1;
+        }
+        else {
+            this.linesNext = linesNext;
+        }
+        this.questionAtLine = questionAtLine;
+    }
+
+    // get  
+    
+    getLineAtIndex(index = 0) {
+        return this.lines[index];
+    }
+
+    getNextLine() {
+        return this.lines[this.currentLineIndex++];
+    }
+
+    getSameLine() {
+        return this.lines[this.currentLineIndex - 1];
+    }
+
+
+}
+
+
+export class Line {
+    text = "";
+    delayAfterWhole = 200;
+    delayAfterWord = 200;
+    textWords = [];
+    wordCount = 0;
+    currentIndex = 0;
+    textFullPunctuationPositions = [];
+    textHalfPunctuationPositions = [];
+
+    constructor (text, delayAfterWhole = 200, delayAfterWord = 120) {
+        this.text = text;
+        this.delayAfterWhole = delayAfterWhole;
+        this.delayAfterWord = delayAfterWord;
+        this.textWords = text.split(" ");
+        this.wordCount = this.textWords.length;
+
+        for (let i = 0; i < this.wordCount; i ++) {
+            const punctation = this.textWords[i].match(/[.,!?;:]/);
+            if (punctation?.includes(",")) {
+                this.textHalfPunctuationPositions.push(i);
+            }
+            else if (punctation) {
+                this.textFullPunctuationPositions.push(i);
+            }
+        }
+    }
+
+
+}

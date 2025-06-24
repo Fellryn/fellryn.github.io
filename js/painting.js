@@ -1,3 +1,5 @@
+import { levelOneText } from "./level-text/1";
+
 let mouseIsDown = false;
 let level = 30;
 const FRAME_SIZE = 600;

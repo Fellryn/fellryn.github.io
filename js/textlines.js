@@ -41,6 +41,14 @@ export class TextLines {
         return this.lines[this.currentLineIndex - 1];
     }
 
+    get lineIndex() {
+        return this.currentLineIndex;
+    }
+
+    get wordIndex() {
+        return this.lines[this.currentLineIndex].wordIndex;
+    }
+
 
 }
 
@@ -72,6 +80,27 @@ export class Line {
             }
         }
     }
+
+    checkPunctuationPause() {
+        let pauseModifier = 0;
+        pauseModifier = this.textHalfPunctuationPositions.includes(this.currentIndex) == true ? 1 : 0;
+        pauseModifier = this.textFullPunctuationPositions.includes(this.currentIndex) == true ? 3 : 0;
+        return pauseModifier; 
+    }
+
+    get isLastWord() {
+        return this.textWords[this.currentIndex] == null;
+    }
+
+    getNextWord() {
+        return this.textWords[this.currentIndex++];
+    }
+
+    get wordIndex() {
+        return this.currentIndex;
+    }
+
+
 
 
 }

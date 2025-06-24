@@ -1,4 +1,4 @@
-import { levelOneText } from "./level-text/1";
+import { levelOneText } from "./level-text/1.js";
 
 let mouseIsDown = false;
 let level = 30;
@@ -122,9 +122,10 @@ window.addEventListener("load", (e) => {
 
 function setupTalkArea() {
     talkTextArea = document.getElementById("talkText");
-    hasTextToDisplay = true;
-
-
+    
+    if (levelOneText) {
+        hasTextToDisplay = true;
+    }
 }
 
 function showTextArea() {
@@ -139,31 +140,54 @@ function setTextAreaHeight(calculate = false, height = 0) {
     talkPanel.style.maxHeight = height + "px";
 }
 
-function updateText(newText) {
-    const testString = "Hello my good fellow! I see you want to paint today! Well, you're in luck, we have a wall you can paint right here! Hello my good fellow! I see you want to paint today! Well, you're in luck, we have a wall you can paint right here!";
-    const words = testString.split(" ");
-    currTextLength = words.length;
-    // currTextLength = testString.length;
-    if (currTextIndex < currTextLength) {
-        const newEl = document.createElement("span");
-        newEl.classList.add("fade-in");
-        newEl.textContent = words[currTextIndex++] + " ";
-        talkTextArea.appendChild(newEl);
-        setTextAreaHeight(true);
+function updateText() {
 
-        // Check if word contains punctation and do delay if so.
-        // The tick counts down for a few beats rather than sending the next word.
-        const punctation = words[currTextIndex - 1].match(/[.,!?;:]/);
-        if (punctation?.includes(",")) {
-            doTextPauseForCycles = TEXT_PAUSE_CYCLES_SHORT;
-        } 
-        else if (punctation) {
-            doTextPauseForCycles = TEXT_PAUSE_CYCLES_LONG;
-        }
-        // talkTextArea.innerHTML += `<span class="fade-in">${words[currTextIndex++]} </span>`;
-    } else {
+    const lineIndex = levelOneText.lineIndex;
+    const wordIndex = levelOneText.wordIndex;
+
+    if (levelOneText.lines[lineIndex].isLastWord) { 
         hasTextToDisplay = false;
+        return;
     }
+
+    const hasPause = levelOneText.lines[lineIndex].checkPunctuationPause();
+    doTextPauseForCycles = hasPause;
+    
+
+    const newEl = document.createElement("span");
+    newEl.classList.add("fade-in");
+
+
+
+    newEl.textContent = levelOneText.lines[lineIndex].getNextWord() + " ";
+    talkTextArea.appendChild(newEl);
+    setTextAreaHeight(true);
+
+
+    // const testString = "Hello my good fellow! I see you want to paint today! Well, you're in luck, we have a wall you can paint right here! Hello my good fellow! I see you want to paint today! Well, you're in luck, we have a wall you can paint right here!";
+    // const words = testString.split(" ");
+    // currTextLength = words.length;
+    // // currTextLength = testString.length;
+    // if (currTextIndex < currTextLength) {
+    //     const newEl = document.createElement("span");
+    //     newEl.classList.add("fade-in");
+    //     newEl.textContent = words[currTextIndex++] + " ";
+    //     talkTextArea.appendChild(newEl);
+    //     setTextAreaHeight(true);
+
+    //     // Check if word contains punctation and do delay if so.
+    //     // The tick counts down for a few beats rather than sending the next word.
+    //     const punctation = words[currTextIndex - 1].match(/[.,!?;:]/);
+    //     if (punctation?.includes(",")) {
+    //         doTextPauseForCycles = TEXT_PAUSE_CYCLES_SHORT;
+    //     } 
+    //     else if (punctation) {
+    //         doTextPauseForCycles = TEXT_PAUSE_CYCLES_LONG;
+    //     }
+    //     // talkTextArea.innerHTML += `<span class="fade-in">${words[currTextIndex++]} </span>`;
+    // } else {
+    //     hasTextToDisplay = false;
+    // }
 }
 
 function setupScreenResizingListener() {

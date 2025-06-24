@@ -1,5 +1,5 @@
-import { TextLines } from "../textlines";
-import { Line } from "../textlines";
+import { TextLines } from "../textlines.js";
+import { Line } from "../textlines.js";
 
 export const levelOneText = new TextLines(
     0, 

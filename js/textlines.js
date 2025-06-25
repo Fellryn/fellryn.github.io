@@ -4,13 +4,14 @@ export class TextLines {
     // All the lines that will be said in the level/interaction.
     // Always pass lines as an array, even if there is only one line.
     lines = [];
+    // Does the line automatically go to the next one once the delay is complete.
+    autoNextLine = true;
     // The next line that will be displayed after the current one finishes as a set of 
     // integers. E.g. [0, 1, 2, 3, 4]
     linesNext = [];
     // Denotes which line is a question, and which line to go to for either yes or no.
     questionAtLine = [];
-    // Does the line automatically go to the next one once the delay is complete.
-    autoNextLine = true;
+
 
     constructor(startIndex, lines, autoNextLine = true, questionAtLine = null, linesNext = -1) {
         this.currentLineIndex = startIndex;
@@ -89,19 +90,19 @@ export class Line {
     delayAfterWhole = 200;
     delayAfterWord = 200;
     textWords = [];
-    toolTipText = [];
+    tooltipText = [];
     wordCount = 0;
     currentIndex = 0;
     textFullPunctuationPositions = [];
     textHalfPunctuationPositions = [];
 
-    constructor (text, delayAfterWhole = 200, toolTipText = [], delayAfterWord = 120) {
+    constructor (text, delayAfterWhole = 200, tooltipText = [], delayAfterWord = 120) {
         this.text = text;
         this.delayAfterWhole = delayAfterWhole;
         this.delayAfterWord = delayAfterWord;
         this.textWords = text.split(" ");
         this.wordCount = this.textWords.length;
-        this.toolTipText = toolTipText;
+        this.tooltipText = tooltipText;
 
         for (let i = 0; i < this.wordCount; i ++) {
             const punctation = this.textWords[i].match(/[.,!?;:]/);
@@ -145,7 +146,9 @@ export class Line {
         return this.delayAfterWhole;
     }
 
-
+    get tooltipText() {
+        return this.tooltipText;
+    }
 
 
 

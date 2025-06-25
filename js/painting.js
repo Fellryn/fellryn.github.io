@@ -1,7 +1,8 @@
-import { levelOneText } from "./level-text/1.js";
+import { levelText } from "./level-text/levelText.js";
 
 let mouseIsDown = false;
-let level = 30;
+let bubbleFidelity = 30;
+let level = 0;
 const FRAME_SIZE = 600;
 const COVER_TRANSITION_TIME = 250;
 let isChangingLevel = false;
@@ -128,7 +129,7 @@ function setupTalkArea() {
 
     if (yesButton) {
         yesButton.addEventListener('click', () => {
-            levelOneText.lineIndex = yesButton.targetIndex;
+            levelText[level].lineIndex = yesButton.targetIndex;
             hasTextToDisplay = true;
 
             yesButton.classList.remove("fade-in");
@@ -140,7 +141,7 @@ function setupTalkArea() {
 
     if (noButton) {
         noButton.addEventListener('click', () => {
-            levelOneText.lineIndex = noButton.targetIndex;
+            levelText[level].lineIndex = noButton.targetIndex;
             hasTextToDisplay = true;
 
             noButton.classList.remove("fade-in");
@@ -150,13 +151,13 @@ function setupTalkArea() {
         });
     }
     
-    if (levelOneText) {
+    if (levelText[level]) {
         hasTextToDisplay = true;
     }
 
     if (talkSkipButton) {
         talkSkipButton.addEventListener('click', () => {
-            const delayBeforeNextLine = levelOneText.currentLine.delayAfterWhole;
+            const delayBeforeNextLine = [level].currentLine.delayAfterWhole;
             if (doTextPauseForCycles >= delayBeforeNextLine - 2) {
                 return;
             } 
@@ -165,14 +166,14 @@ function setupTalkArea() {
             }
             else {
                 const newEl = document.createElement("span");
-                newEl.textContent = levelOneText.currentLine.text;
+                newEl.textContent = levelText[level].currentLine.text;
                 talkTextArea.textContent = "";
                 talkTextArea.appendChild(newEl);
                 setTextAreaHeight(true);
 
 
                 doTextPauseForCycles = delayBeforeNextLine;
-                if (levelOneText.getNextLine() == -1) {
+                if (levelText[level].getNextLine() == -1) {
                     hasTextToDisplay = false;
                     return;
                 };
@@ -195,8 +196,9 @@ function setTextAreaHeight(calculate = false, height = 0) {
 
 function updateText() {
     // Get some common properties that will be used throughout.
-    const lineIndex = levelOneText.lineIndex;
-    const wordIndex = levelOneText.wordIndex;
+    const lineIndex = levelText[level].lineIndex;
+    const wordIndex = levelText[level].wordIndex;
+
 
     // If its the first word in the line, then clear the existing text.
     // Could change this so the existing text remains but is added to the text box.
@@ -215,44 +217,45 @@ function updateText() {
 
 
     // If its the last word and last line, then all text has been displayed so end display.
-    if (levelOneText.lines[lineIndex].isLastWord && levelOneText.isLastLine) { 
+    if (levelText[level].lines[lineIndex].isLastWord && levelText[level].isLastLine) { 
         hasTextToDisplay = false;
         return;
     } 
     // If its the last word, but not the last line, get the delay and the next word.
-    else if (levelOneText.lines[lineIndex].isLastWord && !levelOneText.isLastLine) {
+    else if (levelText[level].lines[lineIndex].isLastWord && !levelText[level].isLastLine) {
         // Get the delay from the line.
-        const delayBeforeNextLine = levelOneText.currentLine.delayAfterWhole;
+        const delayBeforeNextLine = levelText[level].currentLine.delayAfterWhole;
 
         // Check if its a question. If it is, then wait for a response.
-        const questionInfo = levelOneText.isLineQuestion;
+        const questionInfo = levelText[level].isLineQuestion;
+        const tooltipText = levelText[level].currentLine.tooltipText;
         if (questionInfo != null ) {
             hasTextToDisplay = false;
-            showQuestionButtons(questionInfo);
+            showQuestionButtons(questionInfo, tooltipText);
             return;
         }
 
         // If there is a delay, cause the delay and get the next line.
         if (delayBeforeNextLine) {
             doTextPauseForCycles = delayBeforeNextLine;
-            levelOneText.getNextLine();
+            levelText[level].getNextLine();
             return;
         // If there is no delay, then go straight to the next line.
         }
          else {
-            levelOneText.getNextLine();
+            levelText[level].getNextLine();
             return;
         }
     } 
 
     // Setup pause for next word if the current word has one.
-    const hasPause = levelOneText.lines[lineIndex].checkPunctuationPause();
+    const hasPause = levelText[level].lines[lineIndex].checkPunctuationPause();
     doTextPauseForCycles = hasPause;
     
     // Add the current word to the display area and check text area height.
     const newEl = document.createElement("span");
     newEl.classList.add("fade-in");
-    newEl.textContent = levelOneText.lines[lineIndex].getNextWord() + " ";
+    newEl.textContent = levelText[level].lines[lineIndex].getNextWord() + " ";
     talkTextArea.appendChild(newEl);
     setTextAreaHeight(true);
 
@@ -283,15 +286,20 @@ function updateText() {
     // }
 }
 
-function showQuestionButtons(questionInfo) {
+function showQuestionButtons(questionInfo, tooltipText) {
     const yesButton = document.getElementById("btnTalkYes");
     const noButton = document.getElementById("btnTalkNo");
+    const yesToolTip = document.getElementById("talkTooltipTextYes");
+    const noToolTip = document.getElementById("talkTooltipTextNo");
 
     yesButton.classList.add("fade-in");
     noButton.classList.add("fade-in");
 
     yesButton.targetIndex = questionInfo[1];
     noButton.targetIndex = questionInfo[2];
+
+    yesToolTip.textContent = tooltipText[0];
+    noToolTip.textContent = tooltipText[1];
 }
 
 
@@ -482,7 +490,7 @@ async function setupBubbles(mainFrame) {
     
     mainFrame.textContent = "";
 
-    const size = FRAME_SIZE / (level * 2);
+    const size = FRAME_SIZE / (bubbleFidelity * 2);
     let totalCount = (FRAME_SIZE / size) * (FRAME_SIZE / size);
     totalCount = Math.trunc((totalCount * 100)/ 100);
     const fragment = document.createDocumentFragment();
@@ -668,7 +676,8 @@ function checkLevelRules(mainFrame) {
 
 function setupResetButton(button, mainFrame) {
     button.addEventListener('click', () => {
-       level = 30;
+    //    bubbleFidelity = 30;
+    //    level = 0;
 
        setupBubbles(mainFrame); 
     });

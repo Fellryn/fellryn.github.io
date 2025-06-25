@@ -59,10 +59,11 @@ let doTextPauseForCycles = 0;
 const TEXT_PAUSE_CYCLES_LONG = 3;
 const TEXT_PAUSE_CYCLES_SHORT = 1;
 let talkTextArea = null;
-let currText = "";
-let currWords = "";
-let currTextLength = 0;
-let currTextIndex = 0;
+let waitingForEvent = false;
+let lastEventFinished = false;
+let eventString = "";
+let lastEventCheck = 0;
+const EVENT_CHECK_INTERVAL = 100;
 
 window.addEventListener("load", (e) => {
     mainFrameRef = document.getElementById("mainFrame"); 
@@ -131,6 +132,7 @@ function setupTalkArea() {
         yesButton.addEventListener('click', () => {
             levelText[level].lineIndex = yesButton.targetIndex;
             hasTextToDisplay = true;
+            doTextPauseForCycles = 0;
 
             yesButton.classList.remove("fade-in");
             yesButton.classList.add("fade-out");
@@ -143,6 +145,7 @@ function setupTalkArea() {
         noButton.addEventListener('click', () => {
             levelText[level].lineIndex = noButton.targetIndex;
             hasTextToDisplay = true;
+            doTextPauseForCycles = 0;
 
             noButton.classList.remove("fade-in");
             noButton.classList.add("fade-out");
@@ -157,7 +160,10 @@ function setupTalkArea() {
 
     if (talkSkipButton) {
         talkSkipButton.addEventListener('click', () => {
-            const delayBeforeNextLine = [level].currentLine.delayAfterWhole;
+            if (waitingForEvent) { return; }
+            if (levelText[level].lineIndex == -1) { return };
+
+            const delayBeforeNextLine = levelText[level].currentLine.delayAfterWhole;
             if (doTextPauseForCycles >= delayBeforeNextLine - 2) {
                 return;
             } 
@@ -170,9 +176,8 @@ function setupTalkArea() {
                 talkTextArea.textContent = "";
                 talkTextArea.appendChild(newEl);
                 setTextAreaHeight(true);
-
-
                 doTextPauseForCycles = delayBeforeNextLine;
+
                 if (levelText[level].getNextLine() == -1) {
                     hasTextToDisplay = false;
                     return;
@@ -197,7 +202,7 @@ function setTextAreaHeight(calculate = false, height = 0) {
 function updateText() {
     // Get some common properties that will be used throughout.
     const lineIndex = levelText[level].lineIndex;
-    const wordIndex = levelText[level].wordIndex;
+    const wordIndex = lineIndex == -1 ? null : levelText[level].wordIndex;
 
 
     // If its the first word in the line, then clear the existing text.
@@ -206,9 +211,6 @@ function updateText() {
         talkTextArea.textContent = "";
     }
 
-    
-
-
     // Insert new line below version of above.
     // if (wordIndex == 0 && lineIndex != 0) {
     //     const lineBreak = document.createElement("br");
@@ -216,8 +218,11 @@ function updateText() {
     // }
 
 
+
     // If its the last word and last line, then all text has been displayed so end display.
-    if (levelText[level].lines[lineIndex].isLastWord && levelText[level].isLastLine) { 
+    // Or if there is no more lines to display because of branching choices.
+    if (lineIndex == -1 ||
+        (levelText[level].lines[lineIndex].isLastWord && levelText[level].isLastLine)) { 
         hasTextToDisplay = false;
         return;
     } 
@@ -235,6 +240,15 @@ function updateText() {
             return;
         }
 
+        // Wait for an event (like during the tutorial).
+        if (levelText[level].currentLine.willWaitForEvent) {
+            hasTextToDisplay = false;
+            waitingForEvent = true;
+            // eventString = levelText[level].currentLine.eventString;
+            // TODO: Optionally hide skip button for some events.
+            return;
+        }
+
         // If there is a delay, cause the delay and get the next line.
         if (delayBeforeNextLine) {
             doTextPauseForCycles = delayBeforeNextLine;
@@ -242,7 +256,7 @@ function updateText() {
             return;
         // If there is no delay, then go straight to the next line.
         }
-         else {
+        else {
             levelText[level].getNextLine();
             return;
         }
@@ -291,6 +305,9 @@ function showQuestionButtons(questionInfo, tooltipText) {
     const noButton = document.getElementById("btnTalkNo");
     const yesToolTip = document.getElementById("talkTooltipTextYes");
     const noToolTip = document.getElementById("talkTooltipTextNo");
+    const skipButton = document.getElementById("btnTalkSkip");
+
+    skipButton.disabled = true;
 
     yesButton.classList.add("fade-in");
     noButton.classList.add("fade-in");
@@ -380,6 +397,10 @@ function setupPaints() {
                 });
                 currentColor =  "rgb(255,0,0)";
                 setColorOnItem(currentColor);
+
+                if (waitingForEvent) {
+                    eventString = "putPaintOnTool";
+                }
             }
         });
     }
@@ -414,13 +435,16 @@ function setupPaintItems() {
                 if (item) {
                     resetItem(item);
                 }
-            item = paintRollerPlaceholder.firstElementChild;
-            item.parentElement.style.zIndex = "30";
-            itemActiveEl = paintRollerPlaceholder.querySelector('.active-el');
-            itemCollisionBox = paintRollerPlaceholder.querySelector('.rolling-pin-collision-box');
-            currentColor = item.currColor;
-            item.style.willChange = "transform";
-            } 
+                item = paintRollerPlaceholder.firstElementChild;
+                item.parentElement.style.zIndex = "30";
+                itemActiveEl = paintRollerPlaceholder.querySelector('.active-el');
+                itemCollisionBox = paintRollerPlaceholder.querySelector('.rolling-pin-collision-box');
+                currentColor = item.currColor;
+                item.style.willChange = "transform";
+                if (waitingForEvent) {
+                    eventString = "pickUpTool";
+                }
+            }
             else {
                 resetItem(item);
             }
@@ -433,14 +457,17 @@ function setupPaintItems() {
             if (!item || item != paintBrushPlaceholder.firstElementChild) {
                 if (item) {
                     resetItem(item);
-                }                
-            item = paintBrushPlaceholder.firstElementChild;
-            item.parentElement.style.zIndex = "30";
-            itemActiveEl = paintBrushPlaceholder.querySelector('.active-el');
-            itemCollisionBox = paintBrushPlaceholder.querySelector('.paintbrush-collision-box');
-            currentColor = item.currColor;
-            item.style.willChange = "transform";
-            } 
+                }
+                item = paintBrushPlaceholder.firstElementChild;
+                item.parentElement.style.zIndex = "30";
+                itemActiveEl = paintBrushPlaceholder.querySelector('.active-el');
+                itemCollisionBox = paintBrushPlaceholder.querySelector('.paintbrush-collision-box');
+                currentColor = item.currColor;
+                item.style.willChange = "transform";
+                if (waitingForEvent) {
+                    eventString = "pickUpTool";
+                }
+            }
             else {
                 resetItem(item);
             }
@@ -453,14 +480,17 @@ function setupPaintItems() {
             if (!item || item != paintBrushSmallPlaceholder.firstElementChild) {
                 if (item) {
                     resetItem(item);
-                }                
-            item = paintBrushSmallPlaceholder.firstElementChild;
-            item.parentElement.style.zIndex = "30";
-            itemActiveEl = paintBrushSmallPlaceholder.querySelector('.active-el');
-            itemCollisionBox = paintBrushSmallPlaceholder.querySelector('.paintbrush-small-collision-box');
-            currentColor = item.currColor;
-            item.style.willChange = "transform";
-            } 
+                }
+                item = paintBrushSmallPlaceholder.firstElementChild;
+                item.parentElement.style.zIndex = "30";
+                itemActiveEl = paintBrushSmallPlaceholder.querySelector('.active-el');
+                itemCollisionBox = paintBrushSmallPlaceholder.querySelector('.paintbrush-small-collision-box');
+                currentColor = item.currColor;
+                item.style.willChange = "transform";
+                if (waitingForEvent) {
+                    eventString = "pickUpTool";
+                }
+            }
             else {
                 resetItem(item);
             }
@@ -624,6 +654,20 @@ function tick(timestamp) {
                 updateText();
             }
             lastTextUpdate = timestamp;
+        }
+    }
+    
+    if (waitingForEvent) {
+        if (timestamp - lastEventCheck >= EVENT_CHECK_INTERVAL) {
+            if (eventString === levelText[level].currentLine.eventString) {
+                waitingForEvent = false;
+                hasTextToDisplay = true;
+                // lastEventFinished = true;
+                doTextPauseForCycles = 0;
+                levelText[level].getNextLine();
+            }
+        } else {
+            lastEventCheck = timestamp;
         }
     }
 
@@ -895,6 +939,10 @@ function checkCollisions() {
 
             if (currWetLevel < 10 && item.saturationLevel > 0) {
                 bubble.dataset.recent = currWetLevel + roundToQuarter(saturationModifier / 2);
+            }
+
+            if (waitingForEvent) {
+                eventString = "putPaintOnCanvas";
             }
             // console.log(currDryness);
             // console.log(`X: ${bubble.x}, Y: ${bubble.y}`);

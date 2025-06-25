@@ -31,8 +31,6 @@ export class TextLines {
         this.questionAtLine = questionAtLine;
 
     }
-
-    // get  
     
     getLineAtIndex(index = 0) {
         return this.lines[index];
@@ -47,7 +45,8 @@ export class TextLines {
             return -1;
         }
         else {
-            return this.lines[this.currentLineIndex++];
+            this.currentLineIndex = this.linesNext[this.currentLineIndex];
+            return this.lines[this.currentLineIndex];
         }
     }
 
@@ -95,14 +94,18 @@ export class Line {
     currentIndex = 0;
     textFullPunctuationPositions = [];
     textHalfPunctuationPositions = [];
+    waitForEvent = false;
+    inputEvent = "";
 
-    constructor (text, delayAfterWhole = 200, tooltipText = [], delayAfterWord = 120) {
+    constructor (text, delayAfterWhole = 200, waitForInput = false, inputEvent = "", tooltipText = [], delayAfterWord = 120) {
         this.text = text;
         this.delayAfterWhole = delayAfterWhole;
         this.delayAfterWord = delayAfterWord;
         this.textWords = text.split(" ");
         this.wordCount = this.textWords.length;
         this.tooltipText = tooltipText;
+        this.waitForEvent = waitForInput;
+        this.inputEvent = inputEvent;
 
         for (let i = 0; i < this.wordCount; i ++) {
             const punctation = this.textWords[i].match(/[.,!?;:]/);
@@ -148,6 +151,14 @@ export class Line {
 
     get tooltipText() {
         return this.tooltipText;
+    }
+
+    get willWaitForEvent() {
+        return this.waitForEvent;
+    }
+
+    get eventString() {
+        return this.inputEvent;
     }
 
 

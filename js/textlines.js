@@ -37,6 +37,10 @@ export class TextLines {
         return this.lines[index];
     }
 
+    set lineIndex(index) {
+        this.currentLineIndex = index; 
+    }
+
     getNextLine() {
         if (this.currentLineIndex == this.lines.length - 1) {
             return -1;
@@ -70,8 +74,13 @@ export class TextLines {
         return this.autoNextLine;
     }
 
-
-
+    get isLineQuestion() {
+        if (this.questionAtLine.length == 0) {
+            return null;
+        }
+        const questionMatch = this.questionAtLine.find(q => q[0] == this.currentLineIndex);
+        return questionMatch;
+    }
 }
 
 
@@ -80,17 +89,19 @@ export class Line {
     delayAfterWhole = 200;
     delayAfterWord = 200;
     textWords = [];
+    toolTipText = [];
     wordCount = 0;
     currentIndex = 0;
     textFullPunctuationPositions = [];
     textHalfPunctuationPositions = [];
 
-    constructor (text, delayAfterWhole = 200, delayAfterWord = 120) {
+    constructor (text, delayAfterWhole = 200, toolTipText = [], delayAfterWord = 120) {
         this.text = text;
         this.delayAfterWhole = delayAfterWhole;
         this.delayAfterWord = delayAfterWord;
         this.textWords = text.split(" ");
         this.wordCount = this.textWords.length;
+        this.toolTipText = toolTipText;
 
         for (let i = 0; i < this.wordCount; i ++) {
             const punctation = this.textWords[i].match(/[.,!?;:]/);

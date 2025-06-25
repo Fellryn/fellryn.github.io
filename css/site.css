@@ -166,11 +166,34 @@ body {
     /* will-change: transform, background-color; */
 }
 
+.talk-panel .talk-button.action {
+    display: flex;
+    transition: transform 50ms, background-color 100ms, opacity 100ms;
+    border-radius: 5px;
+    user-select: none;
+    opacity: 0;
+    visibility: hidden;
+    /* position: relative; */
+    /* will-change: transform, background-color; */
+}
+
+.talk-panel .talk-button.fade-out {
+    animation: fade-out 250ms linear;
+    animation-fill-mode: forwards;
+}
+
+.talk-panel .talk-button.fade-in {
+    animation: fade-in 250ms linear;
+    animation-fill-mode: forwards;
+    visibility: visible;
+}
+
 .talk-panel .talk-button svg {
     margin: auto auto;
     width: 40px;
     height: 40px;
     fill: #e56c3a;
+    
 }
 
 .talk-panel .talk-button:hover {

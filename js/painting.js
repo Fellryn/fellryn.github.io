@@ -123,6 +123,32 @@ window.addEventListener("load", (e) => {
 function setupTalkArea() {
     talkTextArea = document.getElementById("talkText");
     const talkSkipButton = document.getElementById("btnTalkSkip");
+    const yesButton = document.getElementById("btnTalkYes");
+    const noButton = document.getElementById("btnTalkNo");
+
+    if (yesButton) {
+        yesButton.addEventListener('click', () => {
+            levelOneText.lineIndex = yesButton.targetIndex;
+            hasTextToDisplay = true;
+
+            yesButton.classList.remove("fade-in");
+            yesButton.classList.add("fade-out");
+            noButton.classList.remove("fade-in");
+            noButton.classList.add("fade-out");
+        });
+    }
+
+    if (noButton) {
+        noButton.addEventListener('click', () => {
+            levelOneText.lineIndex = noButton.targetIndex;
+            hasTextToDisplay = true;
+
+            noButton.classList.remove("fade-in");
+            noButton.classList.add("fade-out");
+            yesButton.classList.remove("fade-in");
+            yesButton.classList.add("fade-out");
+        });
+    }
     
     if (levelOneText) {
         hasTextToDisplay = true;
@@ -131,7 +157,7 @@ function setupTalkArea() {
     if (talkSkipButton) {
         talkSkipButton.addEventListener('click', () => {
             const delayBeforeNextLine = levelOneText.currentLine.delayAfterWhole;
-            if (doTextPauseForCycles == delayBeforeNextLine) {
+            if (doTextPauseForCycles >= delayBeforeNextLine - 2) {
                 return;
             } 
             else if (doTextPauseForCycles > 0) {
@@ -168,24 +194,50 @@ function setTextAreaHeight(calculate = false, height = 0) {
 }
 
 function updateText() {
-
+    // Get some common properties that will be used throughout.
     const lineIndex = levelOneText.lineIndex;
     const wordIndex = levelOneText.wordIndex;
 
-    if (wordIndex == 0) {
-        talkTextArea.innerHTML = "";
+    // If its the first word in the line, then clear the existing text.
+    // Could change this so the existing text remains but is added to the text box.
+    if (wordIndex == 0 && lineIndex != 0) {
+        talkTextArea.textContent = "";
     }
 
+    
+
+
+    // Insert new line below version of above.
+    // if (wordIndex == 0 && lineIndex != 0) {
+    //     const lineBreak = document.createElement("br");
+    //     talkTextArea.appendChild(lineBreak);
+    // }
+
+
+    // If its the last word and last line, then all text has been displayed so end display.
     if (levelOneText.lines[lineIndex].isLastWord && levelOneText.isLastLine) { 
         hasTextToDisplay = false;
         return;
     } 
+    // If its the last word, but not the last line, get the delay and the next word.
     else if (levelOneText.lines[lineIndex].isLastWord && !levelOneText.isLastLine) {
+        // Get the delay from the line.
         const delayBeforeNextLine = levelOneText.currentLine.delayAfterWhole;
+
+        // Check if its a question. If it is, then wait for a response.
+        const questionInfo = levelOneText.isLineQuestion;
+        if (questionInfo != null ) {
+            hasTextToDisplay = false;
+            showQuestionButtons(questionInfo);
+            return;
+        }
+
+        // If there is a delay, cause the delay and get the next line.
         if (delayBeforeNextLine) {
             doTextPauseForCycles = delayBeforeNextLine;
             levelOneText.getNextLine();
             return;
+        // If there is no delay, then go straight to the next line.
         }
          else {
             levelOneText.getNextLine();
@@ -193,15 +245,13 @@ function updateText() {
         }
     } 
 
+    // Setup pause for next word if the current word has one.
     const hasPause = levelOneText.lines[lineIndex].checkPunctuationPause();
     doTextPauseForCycles = hasPause;
     
-
+    // Add the current word to the display area and check text area height.
     const newEl = document.createElement("span");
     newEl.classList.add("fade-in");
-
-
-
     newEl.textContent = levelOneText.lines[lineIndex].getNextWord() + " ";
     talkTextArea.appendChild(newEl);
     setTextAreaHeight(true);
@@ -232,6 +282,18 @@ function updateText() {
     //     hasTextToDisplay = false;
     // }
 }
+
+function showQuestionButtons(questionInfo) {
+    const yesButton = document.getElementById("btnTalkYes");
+    const noButton = document.getElementById("btnTalkNo");
+
+    yesButton.classList.add("fade-in");
+    noButton.classList.add("fade-in");
+
+    yesButton.targetIndex = questionInfo[1];
+    noButton.targetIndex = questionInfo[2];
+}
+
 
 function setupScreenResizingListener() {
     let resizeTimeout;
@@ -449,7 +511,6 @@ async function setupBubbles(mainFrame) {
         // const backgroundColor = bubbleStyle.backgroundColor;
         newBubble.bubbleColor = DEFAULT_BUBBLE_COLOR;
         newBubble.style.backgroundColor = newBubble.bubbleColor;
-
         
         newBubble.style.width = `${size}px`;
         newBubble.style.height = `${size}px`;
@@ -569,7 +630,7 @@ function tick(timestamp) {
 async function checkPaint() {
     const recentBubbles = Array.from(allBubbles).filter(b => b.dataset.recent !== "0");
     recentBubbles.forEach((bubble) => {
-        currDryness = Number(bubble.dataset.recent);
+        let currDryness = Number(bubble.dataset.recent);
         bubble.dataset.recent = --currDryness;
         if (currDryness < 0) {
             bubble.dataset.recent = 0;

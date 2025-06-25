@@ -9,10 +9,13 @@ export class TextLines {
     linesNext = [];
     // Denotes which line is a question, and which line to go to for either yes or no.
     questionAtLine = [];
+    // Does the line automatically go to the next one once the delay is complete.
+    autoNextLine = true;
 
-    constructor(startIndex, lines, questionAtLine = null, linesNext = -1) {
+    constructor(startIndex, lines, autoNextLine = true, questionAtLine = null, linesNext = -1) {
         this.currentLineIndex = startIndex;
         this.lines = lines;
+        this.autoNextLine = autoNextLine;
         if (linesNext === -1) {
             let i = 1;
             this.linesNext = [];
@@ -25,6 +28,7 @@ export class TextLines {
             this.linesNext = linesNext;
         }
         this.questionAtLine = questionAtLine;
+
     }
 
     // get  
@@ -34,7 +38,12 @@ export class TextLines {
     }
 
     getNextLine() {
-        return this.lines[this.currentLineIndex++];
+        if (this.currentLineIndex == this.lines.length - 1) {
+            return -1;
+        }
+        else {
+            return this.lines[this.currentLineIndex++];
+        }
     }
 
     getSameLine() {
@@ -46,11 +55,19 @@ export class TextLines {
     }
 
     get wordIndex() {
-        return this.lines[this.currentLineIndex].wordIndex;
+        return this.currentLine.wordIndex;
     }
 
     get isLastLine() {
         return this.currentLineIndex == this.lines.length - 1;
+    }
+
+    get currentLine() {
+        return this.lines[this.currentLineIndex];
+    }
+
+    get isAutoNextLine() {
+        return this.autoNextLine;
     }
 
 
@@ -101,9 +118,23 @@ export class Line {
         return this.textWords[this.currentIndex++];
     }
 
+    skipToLastWord() {
+        this.currentIndex = this.wordCount - 1;
+    }
+
     get wordIndex() {
         return this.currentIndex;
     }
+
+    get delayAfterWord() {
+        return this.delayAfterWord;
+    }
+
+    get delayAfterWhole() {
+        return this.delayAfterWhole;
+    }
+
+
 
 
 

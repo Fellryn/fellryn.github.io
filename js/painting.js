@@ -122,9 +122,36 @@ window.addEventListener("load", (e) => {
 
 function setupTalkArea() {
     talkTextArea = document.getElementById("talkText");
+    const talkSkipButton = document.getElementById("btnTalkSkip");
     
     if (levelOneText) {
         hasTextToDisplay = true;
+    }
+
+    if (talkSkipButton) {
+        talkSkipButton.addEventListener('click', () => {
+            const delayBeforeNextLine = levelOneText.currentLine.delayAfterWhole;
+            if (doTextPauseForCycles == delayBeforeNextLine) {
+                return;
+            } 
+            else if (doTextPauseForCycles > 0) {
+                doTextPauseForCycles = 0;
+            }
+            else {
+                const newEl = document.createElement("span");
+                newEl.textContent = levelOneText.currentLine.text;
+                talkTextArea.textContent = "";
+                talkTextArea.appendChild(newEl);
+                setTextAreaHeight(true);
+
+
+                doTextPauseForCycles = delayBeforeNextLine;
+                if (levelOneText.getNextLine() == -1) {
+                    hasTextToDisplay = false;
+                    return;
+                };
+            }
+        });
     }
 }
 
@@ -145,14 +172,25 @@ function updateText() {
     const lineIndex = levelOneText.lineIndex;
     const wordIndex = levelOneText.wordIndex;
 
+    if (wordIndex == 0) {
+        talkTextArea.innerHTML = "";
+    }
+
     if (levelOneText.lines[lineIndex].isLastWord && levelOneText.isLastLine) { 
         hasTextToDisplay = false;
         return;
     } 
     else if (levelOneText.lines[lineIndex].isLastWord && !levelOneText.isLastLine) {
-        talkTextArea.innerHTML = "";
-        levelOneText.currentLineIndex++;
-        return;
+        const delayBeforeNextLine = levelOneText.currentLine.delayAfterWhole;
+        if (delayBeforeNextLine) {
+            doTextPauseForCycles = delayBeforeNextLine;
+            levelOneText.getNextLine();
+            return;
+        }
+         else {
+            levelOneText.getNextLine();
+            return;
+        }
     } 
 
     const hasPause = levelOneText.lines[lineIndex].checkPunctuationPause();

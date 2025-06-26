@@ -1,4 +1,5 @@
 import { levelText } from "./level-text/levelText.js";
+import { getRgbSimilarity, rgbToString, stringToRgb } from "./helpers.js";
 
 let mouseIsDown = false;
 let bubbleFidelity = 30;
@@ -68,6 +69,8 @@ let eventString = "";
 let blockSkipButton = false;
 let lastEventCheck = 0;
 const EVENT_CHECK_INTERVAL = 100;
+let lastFunctionCheck = 0;
+const FUNCTION_CHECK_INTERVAL = 250;
 
 
 
@@ -136,8 +139,8 @@ function setupTalkArea() {
 
     if (yesButton) {
         yesButton.addEventListener('click', () => {
-            levelText[level].lineIndex = yesButton.targetIndex;
-            // levelText[level].currentLine.wordIndex = 0;
+            levelText.textContent[level].lineIndex = yesButton.targetIndex;
+            // levelText.textContent[level].currentLine.wordIndex = 0;
             hasTextToDisplay = true;
             doTextPauseForCycles = 1;
             hasDoneFirstCheck = false;
@@ -151,8 +154,8 @@ function setupTalkArea() {
 
     if (noButton) {
         noButton.addEventListener('click', () => {
-            levelText[level].lineIndex = noButton.targetIndex;
-            // levelText[level].currentLine.wordIndex = 0;
+            levelText.textContent[level].lineIndex = noButton.targetIndex;
+            // levelText.textContent[level].currentLine.wordIndex = 0;
             hasTextToDisplay = true;
             doTextPauseForCycles = 1;
             hasDoneFirstCheck = false;
@@ -165,7 +168,7 @@ function setupTalkArea() {
         });
     }
     
-    if (levelText[level]) {
+    if (levelText.textContent[level]) {
         hasTextToDisplay = true;
     }
 
@@ -173,11 +176,11 @@ function setupTalkArea() {
         talkSkipButton.addEventListener('click', () => {
             if (blockSkipButton) { return; }
             if (waitingForEvent && !hasTextToDisplay) { return; }
-            if (levelText[level].lineIndex == -1) { return };
+            if (levelText.textContent[level].lineIndex == -1) { return };
             if (!hasTextToDisplay) { return; }
 
             // Get the delay that the current line has.
-            const delayBeforeNextLine = levelText[level].currentLine.delayAfterWhole;
+            const delayBeforeNextLine = levelText.textContent[level].currentLine.delayAfterWhole;
             // Check if there has been two cycles since the delay started.
             if (doTextPauseForCycles >= delayBeforeNextLine - 2) {
                 // If so, don't let the skip button be pressed.
@@ -193,7 +196,7 @@ function setupTalkArea() {
             else {
                 blockSkipButton = true;
                 const newEl = document.createElement("span");
-                let newText = levelText[level].currentLine.skipToLastWordAndDisplay().join(" ");
+                let newText = levelText.textContent[level].currentLine.skipToLastWordAndDisplay().join(" ");
                 newText += " ";
                 newEl.textContent = newText;
                 talkTextArea.textContent = "";
@@ -201,7 +204,7 @@ function setupTalkArea() {
                 setTextAreaHeight(true);
                 // doTextPauseForCycles = delayBeforeNextLine;
 
-                // if (levelText[level].getNextLine() == -1) {
+                // if (levelText.textContent[level].getNextLine() == -1) {
                 //     hasTextToDisplay = false;
                 //     return;
                 // };
@@ -224,8 +227,8 @@ function setTextAreaHeight(calculate = false, height = 0) {
 
 function updateText() {
     // Get some common properties that will be used throughout.
-    const lineIndex = levelText[level].lineIndex;
-    const wordIndex = lineIndex == -1 ? null : levelText[level].wordIndex;
+    const lineIndex = levelText.textContent[level].lineIndex;
+    const wordIndex = lineIndex == -1 ? null : levelText.textContent[level].wordIndex;
 
 
     // If its the first word in the line, then clear the existing text.
@@ -242,19 +245,19 @@ function updateText() {
 
     // Check line first once for special details like is it a question: 
 
-    if (!hasDoneFirstCheck && levelText[level].currentLine != null) {
-        levelText[level].currentLine.wordIndex = 0;
+    if (!hasDoneFirstCheck && levelText.textContent[level].currentLine != null) {
+        levelText.textContent[level].currentLine.wordIndex = 0;
         hasDoneFirstCheck = true;
-        if (levelText[level].currentLine.willWaitForEvent) {
+        if (levelText.textContent[level].currentLine.willWaitForEvent) {
             // hasTextToDisplay = false;
             waitingForEventPre = true;
             lastEventFinished = false;
-            // eventString = levelText[level].currentLine.eventString;
+            // eventString = levelText.textContent[level].currentLine.eventString;
             // TODO: Optionally hide skip button for some events.
         }
 
-        const questionInfo = levelText[level].isLineQuestion;
-        const tooltipText = levelText[level].currentLine.tooltipText;
+        const questionInfo = levelText.textContent[level].isLineQuestion;
+        const tooltipText = levelText.textContent[level].currentLine.tooltipText;
         if (questionInfo != null) {
             showQuestionButtons(questionInfo, tooltipText);
         }
@@ -264,18 +267,18 @@ function updateText() {
     // If its the last word and last line, then all text has been displayed so end display.
     // Or if there is no more lines to display because of branching choices.
     if (lineIndex == -1 ||
-        (levelText[level].lines[lineIndex].isLastWord && levelText[level].isLastLine)) { 
+        (levelText.textContent[level].lines[lineIndex].isLastWord && levelText.textContent[level].isLastLine)) { 
         hasTextToDisplay = false;
         return;
     } 
     // If its the last word, but not the last line, get the delay and the next word.
-    else if (levelText[level].lines[lineIndex].isLastWord && !levelText[level].isLastLine) {
+    else if (levelText.textContent[level].lines[lineIndex].isLastWord && !levelText.textContent[level].isLastLine) {
         // Get the delay from the line.
-        const delayBeforeNextLine = levelText[level].currentLine.delayAfterWhole;
+        const delayBeforeNextLine = levelText.textContent[level].currentLine.delayAfterWhole;
 
         // Check if its a question. If it is, then wait for a response.
-        const questionInfo = levelText[level].isLineQuestion;
-        const tooltipText = levelText[level].currentLine.tooltipText;
+        const questionInfo = levelText.textContent[level].isLineQuestion;
+        const tooltipText = levelText.textContent[level].currentLine.tooltipText;
         if (questionInfo != null ) {
             hasTextToDisplay = false;
             // showQuestionButtons(questionInfo, tooltipText);
@@ -283,39 +286,39 @@ function updateText() {
         }
 
         // Wait for an event (like during the tutorial).
-        if (levelText[level].currentLine.willWaitForEvent && !lastEventFinished) {
+        if (levelText.textContent[level].currentLine.willWaitForEvent && !lastEventFinished) {
             hasTextToDisplay = false;
             if (!lastEventFinished) {
                 waitingForEvent = true;
                 return;
             }
-            // eventString = levelText[level].currentLine.eventString;
+            // eventString = levelText.textContent[level].currentLine.eventString;
             // TODO: Optionally hide skip button for some events.
         }
 
         // If there is a delay, cause the delay and get the next line.
         if (delayBeforeNextLine) {
             doTextPauseForCycles = delayBeforeNextLine;
-            levelText[level].getNextLine();
+            levelText.textContent[level].getNextLine();
             hasDoneFirstCheck = false;
             return;
         // If there is no delay, then go straight to the next line.
         }
         else {
-            levelText[level].getNextLine();
+            levelText.textContent[level].getNextLine();
             hasDoneFirstCheck = false;
             return;
         }
     } 
 
     // Setup pause for next word if the current word has one.
-    const hasPause = levelText[level].lines[lineIndex].checkPunctuationPause();
+    const hasPause = levelText.textContent[level].lines[lineIndex].checkPunctuationPause();
     doTextPauseForCycles = hasPause;
     
     // Add the current word to the display area and check text area height.
     const newEl = document.createElement("span");
     newEl.classList.add("fade-in");
-    newEl.textContent = levelText[level].lines[lineIndex].getNextWord() + " ";
+    newEl.textContent = levelText.textContent[level].lines[lineIndex].getNextWord() + " ";
     talkTextArea.appendChild(newEl);
     setTextAreaHeight(true);
 
@@ -716,19 +719,26 @@ function tick(timestamp) {
     }
     
     if (waitingForEvent || waitingForEventPre) {
+        if (timestamp - lastFunctionCheck >= FUNCTION_CHECK_INTERVAL) {
+            if (levelText.functions.checkWholeWallPainted(allBubbles, "rgb(255,0,0)", 0.8)) {
+                eventString = "wallPaintedRed";
+            }
+        }
+
         if (timestamp - lastEventCheck >= EVENT_CHECK_INTERVAL) {
-            if (eventString === levelText[level].currentLine.eventString) {
+            if (eventString === levelText.textContent[level].currentLine.eventString) {
                 waitingForEvent = false;
                 waitingForEventPre = false;
                 hasTextToDisplay = true;
                 lastEventFinished = true;
                 // doTextPauseForCycles = 0;
-                // levelText[level].getNextLine();
+                // levelText.textContent[level].getNextLine();
             }
         } else {
             lastEventCheck = timestamp;
         }
     }
+    
 
     // debug ticks.
     if (debugActive) {
@@ -1074,26 +1084,8 @@ function mixRgb(c1, c2, ratio = 0.5) {
     return rgbToString(mixedColour);
 }
 
-function getRgbSimilarity(c1, c2) {
 
-    const { r:r1, g: g1, b: b1} = stringToRgb(c1);
-    const { r:r2, g: g2, b: b2} = stringToRgb(c2);
 
-    const rSim = (1 - (Math.abs((r1 - r2)) / 255));
-    const gSim = (1 - (Math.abs((g1 - g2)) / 255));
-    const bSim = (1 - (Math.abs((b1 - b2)) / 255));
-
-    return ((rSim * 0.33) + (gSim * 0.33) + (bSim * 0.33));
-}
-
-function rgbToString({r, g, b}) {
-    return `rgb(${r},${g},${b})`;
-}
-
-function stringToRgb(color) {
-    const [r, g, b] = color.match(/\d+/g).map(Number);
-    return {r, g, b};
-}
 
 function wait(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));

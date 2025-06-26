@@ -1,8 +1,9 @@
 import { TextLines } from "../textlines.js";
 import { Line } from "../textlines.js";
+import { getRgbSimilarity, stringToRgb, rgbToString } from "../helpers.js";
 
-export const levelText =
-    [
+export const levelText = {
+    textContent: [
         new TextLines(
             0,
             [
@@ -27,4 +28,18 @@ export const levelText =
             [[5, 6, 12], [11, 13, 7, 14], [12, 13, 15, 14]],
             [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, -1, 11, -1]
         )
-    ];
+    ],
+    functions: {
+        checkWholeWallPainted(allBubbles = [], targetColor, sim) {
+            let isAllColor = true;
+            for (let b of allBubbles) {
+                if (getRgbSimilarity(b.bubbleColor, targetColor) < sim) {
+                    isAllColor = false;
+                    break;
+                }
+            }
+            return isAllColor;
+        }
+    }
+
+}

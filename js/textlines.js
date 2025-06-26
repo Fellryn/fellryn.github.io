@@ -45,6 +45,7 @@ export class TextLines {
             return -1;
         }
         else {
+            this.currentLine.wordIndex = 0;
             this.currentLineIndex = this.linesNext[this.currentLineIndex];
             return this.lines[this.currentLineIndex];
         }
@@ -140,6 +141,10 @@ export class Line {
     skipToLastWordAndDisplay() {
         this.currentIndex = this.wordCount - 1;
         return this.textWords.slice(0, -1);
+    }
+
+    set wordIndex(index) {
+        this.currentIndex = index;
     }
 
     get wordIndex() {

@@ -65,8 +65,11 @@ let waitingForEventPre = false;
 let waitingForEvent = false;
 let lastEventFinished = false;
 let eventString = "";
+let blockSkipButton = false;
 let lastEventCheck = 0;
 const EVENT_CHECK_INTERVAL = 100;
+
+
 
 window.addEventListener("load", (e) => {
     mainFrameRef = document.getElementById("mainFrame"); 
@@ -106,7 +109,7 @@ window.addEventListener("load", (e) => {
         setupPainterViewButton(btnPainterView);
     }
 
-    setupScreenResizingListener();
+    setupScreenChangesListeners();
 
     setupPaints();
 
@@ -134,6 +137,7 @@ function setupTalkArea() {
     if (yesButton) {
         yesButton.addEventListener('click', () => {
             levelText[level].lineIndex = yesButton.targetIndex;
+            // levelText[level].currentLine.wordIndex = 0;
             hasTextToDisplay = true;
             doTextPauseForCycles = 1;
             hasDoneFirstCheck = false;
@@ -148,9 +152,11 @@ function setupTalkArea() {
     if (noButton) {
         noButton.addEventListener('click', () => {
             levelText[level].lineIndex = noButton.targetIndex;
+            // levelText[level].currentLine.wordIndex = 0;
             hasTextToDisplay = true;
             doTextPauseForCycles = 1;
             hasDoneFirstCheck = false;
+
 
             noButton.classList.remove("fade-in");
             noButton.classList.add("fade-out");
@@ -165,17 +171,27 @@ function setupTalkArea() {
 
     if (talkSkipButton) {
         talkSkipButton.addEventListener('click', () => {
-            if (waitingForEvent) { return; }
+            if (blockSkipButton) { return; }
+            if (waitingForEvent && !hasTextToDisplay) { return; }
             if (levelText[level].lineIndex == -1) { return };
+            if (!hasTextToDisplay) { return; }
 
+            // Get the delay that the current line has.
             const delayBeforeNextLine = levelText[level].currentLine.delayAfterWhole;
+            // Check if there has been two cycles since the delay started.
             if (doTextPauseForCycles >= delayBeforeNextLine - 2) {
+                // If so, don't let the skip button be pressed.
                 return;
             } 
+            // Otherwise, set the timer to 0 so the next line appears.
             else if (doTextPauseForCycles > 0) {
                 doTextPauseForCycles = 0;
             }
+            // If there is no active timer, then show the next line except the last word,
+            // so that the normal checks may be performed. 
+            // Block the skip button until the next text check.
             else {
+                blockSkipButton = true;
                 const newEl = document.createElement("span");
                 let newText = levelText[level].currentLine.skipToLastWordAndDisplay().join(" ");
                 newText += " ";
@@ -227,8 +243,8 @@ function updateText() {
     // Check line first once for special details like is it a question: 
 
     if (!hasDoneFirstCheck && levelText[level].currentLine != null) {
+        levelText[level].currentLine.wordIndex = 0;
         hasDoneFirstCheck = true;
-        console.log("first check done");
         if (levelText[level].currentLine.willWaitForEvent) {
             // hasTextToDisplay = false;
             waitingForEventPre = true;
@@ -339,6 +355,8 @@ function showQuestionButtons(questionInfo, tooltipText) {
 
     skipButton.disabled = true;
 
+    yesButton.classList.remove("fade-out");
+    noButton.classList.remove("fade-out");
     yesButton.classList.add("fade-in");
     noButton.classList.add("fade-in");
 
@@ -350,13 +368,21 @@ function showQuestionButtons(questionInfo, tooltipText) {
 }
 
 
-function setupScreenResizingListener() {
+function setupScreenChangesListeners() {
     let resizeTimeout;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
             doUIRefresh();
         }, 100);
+    });
+
+    window.addEventListener('scroll', () => {
+        let scrollTimeout;
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            doUIRefresh();
+        }, 50);
     });
 }
 
@@ -670,13 +696,15 @@ function tick(timestamp) {
     }
 
     if (bubbleRectNeedsUpdate) {
-
         allBubbleRects = new Map(Array.from(allBubbles).map(b => [b, b.getBoundingClientRect()]));
         bubbleRectNeedsUpdate = false;
     }
 
     if (hasTextToDisplay) {
         if (timestamp - lastTextUpdate >= TEXT_UPDATE_INTERVAL) {
+            if (blockSkipButton) {
+                blockSkipButton = false;
+            }
             if (doTextPauseForCycles > 0) {
                 doTextPauseForCycles--;
             } 
@@ -974,6 +1002,8 @@ function checkCollisions() {
             if (currWetLevel < 10 && item.saturationLevel > 0) {
                 bubble.dataset.recent = currWetLevel + roundToQuarter(saturationModifier / 2);
             }
+
+            // scheduler.yield();
 
             if (waitingForEvent || waitingForEventPre) {
                 eventString = "putPaintOnCanvas";

@@ -46,6 +46,7 @@ let lastMouseX = 0;
 let lastMouseY = 0;
 let lastAngle = 0;
 
+let debugActive = false;
 let debugCurrX = null;
 let debugCurrY = null;
 let debugCurrColor = null;
@@ -58,7 +59,9 @@ const TEXT_UPDATE_INTERVAL = 125;
 let doTextPauseForCycles = 0;
 const TEXT_PAUSE_CYCLES_LONG = 3;
 const TEXT_PAUSE_CYCLES_SHORT = 1;
+let hasDoneFirstCheck = false;
 let talkTextArea = null;
+let waitingForEventPre = false;
 let waitingForEvent = false;
 let lastEventFinished = false;
 let eventString = "";
@@ -132,7 +135,8 @@ function setupTalkArea() {
         yesButton.addEventListener('click', () => {
             levelText[level].lineIndex = yesButton.targetIndex;
             hasTextToDisplay = true;
-            doTextPauseForCycles = 0;
+            doTextPauseForCycles = 1;
+            hasDoneFirstCheck = false;
 
             yesButton.classList.remove("fade-in");
             yesButton.classList.add("fade-out");
@@ -145,7 +149,8 @@ function setupTalkArea() {
         noButton.addEventListener('click', () => {
             levelText[level].lineIndex = noButton.targetIndex;
             hasTextToDisplay = true;
-            doTextPauseForCycles = 0;
+            doTextPauseForCycles = 1;
+            hasDoneFirstCheck = false;
 
             noButton.classList.remove("fade-in");
             noButton.classList.add("fade-out");
@@ -172,16 +177,18 @@ function setupTalkArea() {
             }
             else {
                 const newEl = document.createElement("span");
-                newEl.textContent = levelText[level].currentLine.text;
+                let newText = levelText[level].currentLine.skipToLastWordAndDisplay().join(" ");
+                newText += " ";
+                newEl.textContent = newText;
                 talkTextArea.textContent = "";
                 talkTextArea.appendChild(newEl);
                 setTextAreaHeight(true);
-                doTextPauseForCycles = delayBeforeNextLine;
+                // doTextPauseForCycles = delayBeforeNextLine;
 
-                if (levelText[level].getNextLine() == -1) {
-                    hasTextToDisplay = false;
-                    return;
-                };
+                // if (levelText[level].getNextLine() == -1) {
+                //     hasTextToDisplay = false;
+                //     return;
+                // };
             }
         });
     }
@@ -217,6 +224,25 @@ function updateText() {
     //     talkTextArea.appendChild(lineBreak);
     // }
 
+    // Check line first once for special details like is it a question: 
+
+    if (!hasDoneFirstCheck && levelText[level].currentLine != null) {
+        hasDoneFirstCheck = true;
+        console.log("first check done");
+        if (levelText[level].currentLine.willWaitForEvent) {
+            // hasTextToDisplay = false;
+            waitingForEventPre = true;
+            lastEventFinished = false;
+            // eventString = levelText[level].currentLine.eventString;
+            // TODO: Optionally hide skip button for some events.
+        }
+
+        const questionInfo = levelText[level].isLineQuestion;
+        const tooltipText = levelText[level].currentLine.tooltipText;
+        if (questionInfo != null) {
+            showQuestionButtons(questionInfo, tooltipText);
+        }
+    }
 
 
     // If its the last word and last line, then all text has been displayed so end display.
@@ -236,28 +262,32 @@ function updateText() {
         const tooltipText = levelText[level].currentLine.tooltipText;
         if (questionInfo != null ) {
             hasTextToDisplay = false;
-            showQuestionButtons(questionInfo, tooltipText);
+            // showQuestionButtons(questionInfo, tooltipText);
             return;
         }
 
         // Wait for an event (like during the tutorial).
-        if (levelText[level].currentLine.willWaitForEvent) {
+        if (levelText[level].currentLine.willWaitForEvent && !lastEventFinished) {
             hasTextToDisplay = false;
-            waitingForEvent = true;
+            if (!lastEventFinished) {
+                waitingForEvent = true;
+                return;
+            }
             // eventString = levelText[level].currentLine.eventString;
             // TODO: Optionally hide skip button for some events.
-            return;
         }
 
         // If there is a delay, cause the delay and get the next line.
         if (delayBeforeNextLine) {
             doTextPauseForCycles = delayBeforeNextLine;
             levelText[level].getNextLine();
+            hasDoneFirstCheck = false;
             return;
         // If there is no delay, then go straight to the next line.
         }
         else {
             levelText[level].getNextLine();
+            hasDoneFirstCheck = false;
             return;
         }
     } 
@@ -398,7 +428,7 @@ function setupPaints() {
                 currentColor =  "rgb(255,0,0)";
                 setColorOnItem(currentColor);
 
-                if (waitingForEvent) {
+                if (waitingForEvent || waitingForEventPre) {
                     eventString = "putPaintOnTool";
                 }
             }
@@ -441,7 +471,7 @@ function setupPaintItems() {
                 itemCollisionBox = paintRollerPlaceholder.querySelector('.rolling-pin-collision-box');
                 currentColor = item.currColor;
                 item.style.willChange = "transform";
-                if (waitingForEvent) {
+                if (waitingForEvent || waitingForEventPre) {
                     eventString = "pickUpTool";
                 }
             }
@@ -464,7 +494,7 @@ function setupPaintItems() {
                 itemCollisionBox = paintBrushPlaceholder.querySelector('.paintbrush-collision-box');
                 currentColor = item.currColor;
                 item.style.willChange = "transform";
-                if (waitingForEvent) {
+                if (waitingForEvent || waitingForEventPre) {
                     eventString = "pickUpTool";
                 }
             }
@@ -487,7 +517,7 @@ function setupPaintItems() {
                 itemCollisionBox = paintBrushSmallPlaceholder.querySelector('.paintbrush-small-collision-box');
                 currentColor = item.currColor;
                 item.style.willChange = "transform";
-                if (waitingForEvent) {
+                if (waitingForEvent || waitingForEventPre) {
                     eventString = "pickUpTool";
                 }
             }
@@ -657,14 +687,15 @@ function tick(timestamp) {
         }
     }
     
-    if (waitingForEvent) {
+    if (waitingForEvent || waitingForEventPre) {
         if (timestamp - lastEventCheck >= EVENT_CHECK_INTERVAL) {
             if (eventString === levelText[level].currentLine.eventString) {
                 waitingForEvent = false;
+                waitingForEventPre = false;
                 hasTextToDisplay = true;
-                // lastEventFinished = true;
-                doTextPauseForCycles = 0;
-                levelText[level].getNextLine();
+                lastEventFinished = true;
+                // doTextPauseForCycles = 0;
+                // levelText[level].getNextLine();
             }
         } else {
             lastEventCheck = timestamp;
@@ -672,9 +703,10 @@ function tick(timestamp) {
     }
 
     // debug ticks.
-    const { r: r, g: g, b:b } = stringToRgb(currentColor);
-    debugCurrColorOnBrush.textContent = `${r},${g},${b}`;
-
+    if (debugActive) {
+        const { r: r, g: g, b: b } = stringToRgb(currentColor);
+        debugCurrColorOnBrush.textContent = `${r},${g},${b}`;
+    }
 
     requestAnimationFrame(tick);
 }
@@ -734,9 +766,11 @@ function setupDebugButton(button) {
             const visState = debugMenu.style.visibility;
             if (visState === "") {
                 debugMenu.style.visibility = "visible";
+                debugActive = true;
             } 
             else {
                 debugMenu.style.visibility = "";
+                debugActive = false;
             }
         }
     });
@@ -941,7 +975,7 @@ function checkCollisions() {
                 bubble.dataset.recent = currWetLevel + roundToQuarter(saturationModifier / 2);
             }
 
-            if (waitingForEvent) {
+            if (waitingForEvent || waitingForEventPre) {
                 eventString = "putPaintOnCanvas";
             }
             // console.log(currDryness);

@@ -137,6 +137,11 @@ export class Line {
         this.currentIndex = this.wordCount - 1;
     }
 
+    skipToLastWordAndDisplay() {
+        this.currentIndex = this.wordCount - 1;
+        return this.textWords.slice(0, -1);
+    }
+
     get wordIndex() {
         return this.currentIndex;
     }

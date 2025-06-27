@@ -19,7 +19,7 @@ export class TextLines {
     // Denotes 
 
 
-    constructor(startIndex, lines, autoNextLine = true, questionAtLine = null, linesNext = -1) {
+    constructor({ startIndex = 0, lines = [], autoNextLine = true, questionAtLine = null, linesNext = -1 } = {}) {
         this.currentLineIndex = startIndex;
         this.lines = lines;
         this.autoNextLine = autoNextLine;
@@ -109,7 +109,7 @@ export class Line {
     waitForEvent = false;
     inputEvent = "";
 
-    constructor (text, delayAfterWhole = 200, waitForInput = false, inputEvent = "", tooltipText = [], delayAfterWord = 120) {
+    constructor ({ text = "", delayAfterWhole = 200, waitForInput = false, inputEvent = "", tooltipText = [], delayAfterWord = 120 } = {}) {
         this.text = text;
         this.delayAfterWhole = delayAfterWhole;
         this.delayAfterWord = delayAfterWord;

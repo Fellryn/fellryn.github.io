@@ -10,6 +10,11 @@ export class TextLines {
     // integers. E.g. [0, 1, 2, 3, 4]
     linesNext = [];
     // Denotes which line is a question, and which line to go to for either yes or no.
+    // Eg. [1, 4, 5, 6] -> 
+    // 1: line question is on. 
+    // 4: line to go to if yes.
+    // 5: line to go to if no.
+    // 6: line to go to if "yes" condition is not met. 
     questionAtLine = [];
 
 

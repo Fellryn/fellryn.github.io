@@ -65,6 +65,7 @@ let talkTextArea = null;
 let waitingForEventPre = false;
 let waitingForEvent = false;
 let lastEventFinished = false;
+let targetEventString = "";
 let eventString = "";
 let blockSkipButton = false;
 let lastEventCheck = 0;
@@ -139,8 +140,13 @@ function setupTalkArea() {
 
     if (yesButton) {
         yesButton.addEventListener('click', () => {
-            levelText.textContent[level].lineIndex = yesButton.targetIndex;
-            // levelText.textContent[level].currentLine.wordIndex = 0;
+            if (waitingForEvent || waitingForEventPre) {
+                if (!eventString === levelText[level].textContent.currentLine.eventString) {
+                    return;
+                }
+            }
+            levelText[level].textContent.lineIndex = yesButton.targetIndex;
+            // levelText[level].textContent.currentLine.wordIndex = 0;
             hasTextToDisplay = true;
             doTextPauseForCycles = 1;
             hasDoneFirstCheck = false;
@@ -154,8 +160,8 @@ function setupTalkArea() {
 
     if (noButton) {
         noButton.addEventListener('click', () => {
-            levelText.textContent[level].lineIndex = noButton.targetIndex;
-            // levelText.textContent[level].currentLine.wordIndex = 0;
+            levelText[level].textContent.lineIndex = noButton.targetIndex;
+            // levelText[level].textContent.currentLine.wordIndex = 0;
             hasTextToDisplay = true;
             doTextPauseForCycles = 1;
             hasDoneFirstCheck = false;
@@ -168,7 +174,7 @@ function setupTalkArea() {
         });
     }
     
-    if (levelText.textContent[level]) {
+    if (levelText[level].textContent) {
         hasTextToDisplay = true;
     }
 
@@ -176,11 +182,11 @@ function setupTalkArea() {
         talkSkipButton.addEventListener('click', () => {
             if (blockSkipButton) { return; }
             if (waitingForEvent && !hasTextToDisplay) { return; }
-            if (levelText.textContent[level].lineIndex == -1) { return };
+            if (levelText[level].textContent.lineIndex == -1) { return };
             if (!hasTextToDisplay) { return; }
 
             // Get the delay that the current line has.
-            const delayBeforeNextLine = levelText.textContent[level].currentLine.delayAfterWhole;
+            const delayBeforeNextLine = levelText[level].textContent.currentLine.delayAfterWhole;
             // Check if there has been two cycles since the delay started.
             if (doTextPauseForCycles >= delayBeforeNextLine - 2) {
                 // If so, don't let the skip button be pressed.
@@ -196,7 +202,7 @@ function setupTalkArea() {
             else {
                 blockSkipButton = true;
                 const newEl = document.createElement("span");
-                let newText = levelText.textContent[level].currentLine.skipToLastWordAndDisplay().join(" ");
+                let newText = levelText[level].textContent.currentLine.skipToLastWordAndDisplay().join(" ");
                 newText += " ";
                 newEl.textContent = newText;
                 talkTextArea.textContent = "";
@@ -204,7 +210,7 @@ function setupTalkArea() {
                 setTextAreaHeight(true);
                 // doTextPauseForCycles = delayBeforeNextLine;
 
-                // if (levelText.textContent[level].getNextLine() == -1) {
+                // if (levelText[level].textContent.getNextLine() == -1) {
                 //     hasTextToDisplay = false;
                 //     return;
                 // };
@@ -227,8 +233,8 @@ function setTextAreaHeight(calculate = false, height = 0) {
 
 function updateText() {
     // Get some common properties that will be used throughout.
-    const lineIndex = levelText.textContent[level].lineIndex;
-    const wordIndex = lineIndex == -1 ? null : levelText.textContent[level].wordIndex;
+    const lineIndex = levelText[level].textContent.lineIndex;
+    const wordIndex = lineIndex == -1 ? null : levelText[level].textContent.wordIndex;
 
 
     // If its the first word in the line, then clear the existing text.
@@ -245,20 +251,20 @@ function updateText() {
 
     // Check line first once for special details like is it a question: 
 
-    if (!hasDoneFirstCheck && levelText.textContent[level].currentLine != null) {
-        levelText.textContent[level].currentLine.wordIndex = 0;
+    if (!hasDoneFirstCheck && levelText[level].textContent.currentLine != null) {
+        levelText[level].textContent.currentLine.wordIndex = 0;
         hasDoneFirstCheck = true;
-        if (levelText.textContent[level].currentLine.willWaitForEvent) {
+        if (levelText[level].textContent.currentLine.willWaitForEvent) {
             // hasTextToDisplay = false;
             waitingForEventPre = true;
             lastEventFinished = false;
-            // eventString = levelText.textContent[level].currentLine.eventString;
+            // eventString = levelText[level].textContent.currentLine.eventString;
             // TODO: Optionally hide skip button for some events.
         }
 
-        const questionInfo = levelText.textContent[level].isLineQuestion;
-        const tooltipText = levelText.textContent[level].currentLine.tooltipText;
+        const questionInfo = levelText[level].textContent.isLineQuestion;
         if (questionInfo != null) {
+            const tooltipText = levelText[level].textContent.currentLine.tooltipText;
             showQuestionButtons(questionInfo, tooltipText);
         }
     }
@@ -267,58 +273,58 @@ function updateText() {
     // If its the last word and last line, then all text has been displayed so end display.
     // Or if there is no more lines to display because of branching choices.
     if (lineIndex == -1 ||
-        (levelText.textContent[level].lines[lineIndex].isLastWord && levelText.textContent[level].isLastLine)) { 
+        (levelText[level].textContent.lines[lineIndex].isLastWord && levelText[level].textContent.isLastLine)) { 
         hasTextToDisplay = false;
         return;
     } 
     // If its the last word, but not the last line, get the delay and the next word.
-    else if (levelText.textContent[level].lines[lineIndex].isLastWord && !levelText.textContent[level].isLastLine) {
+    else if (levelText[level].textContent.lines[lineIndex].isLastWord && !levelText[level].textContent.isLastLine) {
         // Get the delay from the line.
-        const delayBeforeNextLine = levelText.textContent[level].currentLine.delayAfterWhole;
+        const delayBeforeNextLine = levelText[level].textContent.currentLine.delayAfterWhole;
 
         // Check if its a question. If it is, then wait for a response.
-        const questionInfo = levelText.textContent[level].isLineQuestion;
-        const tooltipText = levelText.textContent[level].currentLine.tooltipText;
+        const questionInfo = levelText[level].textContent.isLineQuestion;
         if (questionInfo != null ) {
+            // const tooltipText = levelText[level].textContent.currentLine.tooltipText;
             hasTextToDisplay = false;
             // showQuestionButtons(questionInfo, tooltipText);
             return;
         }
 
         // Wait for an event (like during the tutorial).
-        if (levelText.textContent[level].currentLine.willWaitForEvent && !lastEventFinished) {
+        if (levelText[level].textContent.currentLine.willWaitForEvent && !lastEventFinished) {
             hasTextToDisplay = false;
             if (!lastEventFinished) {
                 waitingForEvent = true;
                 return;
             }
-            // eventString = levelText.textContent[level].currentLine.eventString;
+            // eventString = levelText[level].textContent.currentLine.eventString;
             // TODO: Optionally hide skip button for some events.
         }
 
         // If there is a delay, cause the delay and get the next line.
         if (delayBeforeNextLine) {
             doTextPauseForCycles = delayBeforeNextLine;
-            levelText.textContent[level].getNextLine();
+            levelText[level].textContent.getNextLine();
             hasDoneFirstCheck = false;
             return;
         // If there is no delay, then go straight to the next line.
         }
         else {
-            levelText.textContent[level].getNextLine();
+            levelText[level].textContent.getNextLine();
             hasDoneFirstCheck = false;
             return;
         }
     } 
 
     // Setup pause for next word if the current word has one.
-    const hasPause = levelText.textContent[level].lines[lineIndex].checkPunctuationPause();
+    const hasPause = levelText[level].textContent.lines[lineIndex].checkPunctuationPause();
     doTextPauseForCycles = hasPause;
     
     // Add the current word to the display area and check text area height.
     const newEl = document.createElement("span");
     newEl.classList.add("fade-in");
-    newEl.textContent = levelText.textContent[level].lines[lineIndex].getNextWord() + " ";
+    newEl.textContent = levelText[level].textContent.lines[lineIndex].getNextWord() + " ";
     talkTextArea.appendChild(newEl);
     setTextAreaHeight(true);
 
@@ -720,19 +726,19 @@ function tick(timestamp) {
     
     if (waitingForEvent || waitingForEventPre) {
         if (timestamp - lastFunctionCheck >= FUNCTION_CHECK_INTERVAL) {
-            if (levelText.functions.checkWholeWallPainted(allBubbles, "rgb(255,0,0)", 0.8)) {
+            if (levelText[level].functions.checkWholeWallPainted(allBubbles, "rgb(255,0,0)", 0.8)) {
                 eventString = "wallPaintedRed";
             }
         }
 
         if (timestamp - lastEventCheck >= EVENT_CHECK_INTERVAL) {
-            if (eventString === levelText.textContent[level].currentLine.eventString) {
+            if (eventString === levelText[level].textContent.currentLine.eventString) {
                 waitingForEvent = false;
                 waitingForEventPre = false;
                 hasTextToDisplay = true;
                 lastEventFinished = true;
                 // doTextPauseForCycles = 0;
-                // levelText.textContent[level].getNextLine();
+                // levelText[level].textContent.getNextLine();
             }
         } else {
             lastEventCheck = timestamp;

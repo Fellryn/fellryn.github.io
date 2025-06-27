@@ -2,16 +2,17 @@ import { TextLines } from "../textlines.js";
 import { Line } from "../textlines.js";
 import { getRgbSimilarity, stringToRgb, rgbToString } from "../helpers.js";
 
-export const levelText = {
-    textContent: [
-        new TextLines(
-            0,
-            [
+export const levelText = [
+    {
+        textContent:
+            new TextLines(
+                0,
+                [
                 /* 0 */ new Line("Hello there!", 10),
                 /* 1 */ new Line("Welcome to the game!", 10),
                 /* 2 */ new Line("We're all about painting here!", 10),
                 /* 3 */ new Line("So, you're probably wondering what the hell is going on, right?", 10),
-                /* 4 */ new Line("Well, you see, this game is all about filling that canvas up with as much paint as possible, and accurately as well sometimes!", 10),
+                /* 4 */ new Line("Well, you see, this game is all about filling that canvas up with as much paint as possible, and sometimes in a certain pattern!", 10),
                 /* 5 */ new Line("So, are you ready to paint?", 10, false, "", [`"Sure am!"`, `"Maybe not..." (Skip Tutorial)`]),
                 /* 6 */ new Line("Well, lets get going then partner!", 10),
                 /* 7 */ new Line("Pick up one of those paint tools by clicking on it!", 3, true, "pickUpTool"),
@@ -23,23 +24,25 @@ export const levelText = {
                 /* 13 */ new Line("Yep, that's it! Nice one, nicely done. Now, something a bit harder if you're interested! (Press fast forward to go to the next level)", 10, true, "skipButtonPressed"),
                 /* 14 */ new Line("Now, don't try pull a fast one on me! That isn't done! I think you may have put some more red paint on that wall!", 10),
                 /* 15 */ new Line("Well, feel free to paint the wall anyway if you want!", 10)
-            ],
-            true,
-            [[5, 6, 12], [11, 13, 7, 14], [12, 13, 15, 14]],
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, -1, 11, -1]
-        )
-    ],
-    functions: {
-        checkWholeWallPainted(allBubbles = [], targetColor, sim) {
-            let isAllColor = true;
-            for (let b of allBubbles) {
-                if (getRgbSimilarity(b.bubbleColor, targetColor) < sim) {
-                    isAllColor = false;
-                    break;
+                ],
+                true,
+                [[5, 6, 12], [11, 13, 7, 14], [12, 13, 15, 14]],
+                [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, -1, 11, -1]
+            )
+        ,
+        functions: {
+            checkWholeWallPainted(allBubbles = [], targetColor, sim) {
+                // debugger;
+                let isAllColor = true;
+                for (let b of allBubbles) {
+                    if (getRgbSimilarity(b.bubbleColor, targetColor) < sim) {
+                        isAllColor = false;
+                        break;
+                    }
                 }
+                return isAllColor;
             }
-            return isAllColor;
         }
     }
+]
 
-}

@@ -70,6 +70,7 @@ let eventString = "";
 let blockSkipButton = false;
 let lastEventCheck = 0;
 const EVENT_CHECK_INTERVAL = 100;
+let levelFunctions = [];
 let lastFunctionCheck = 0;
 const FUNCTION_CHECK_INTERVAL = 250;
 
@@ -119,6 +120,8 @@ window.addEventListener("load", (e) => {
 
     setupTalkArea();
 
+    setupFunctions();
+
     // checkAllBubbles();
 });
 
@@ -141,11 +144,16 @@ function setupTalkArea() {
     if (yesButton) {
         yesButton.addEventListener('click', () => {
             if (waitingForEvent || waitingForEventPre) {
-                if (!eventString === levelText[level].textContent.currentLine.eventString) {
-                    return;
+                if (eventString !== levelText[level].textContent.currentLine.eventString) {
+                    levelText[level].textContent.lineIndex = yesButton.failedIndex;
+                }
+                else {
+                    levelText[level].textContent.lineIndex = yesButton.targetIndex;
                 }
             }
-            levelText[level].textContent.lineIndex = yesButton.targetIndex;
+            else {
+                levelText[level].textContent.lineIndex = yesButton.targetIndex;
+            }
             // levelText[level].textContent.currentLine.wordIndex = 0;
             hasTextToDisplay = true;
             doTextPauseForCycles = 1;
@@ -183,6 +191,10 @@ function setupTalkArea() {
             if (blockSkipButton) { return; }
             if (waitingForEvent && !hasTextToDisplay) { return; }
             if (levelText[level].textContent.lineIndex == -1) { return };
+            if (levelText[level].textContent.nextLineTarget == -1) {
+                changeLevel(1);
+                return;
+            }
             if (!hasTextToDisplay) { return; }
 
             // Get the delay that the current line has.
@@ -223,6 +235,11 @@ function showTextArea() {
 
 }
 
+function changeLevel(count) {
+    level += count;
+    setupBubbles(mainFrameRef);
+}
+
 function setTextAreaHeight(calculate = false, height = 0) {
     const talkPanel = document.querySelector('.talk-panel');
     if (calculate) {
@@ -249,10 +266,11 @@ function updateText() {
     //     talkTextArea.appendChild(lineBreak);
     // }
 
-    // Check line first once for special details like is it a question: 
+    // Check line first once for special details like is it a question, functions etc.
 
     if (!hasDoneFirstCheck && levelText[level].textContent.currentLine != null) {
         levelText[level].textContent.currentLine.wordIndex = 0;
+        talkTextArea.textContent = "";
         hasDoneFirstCheck = true;
         if (levelText[level].textContent.currentLine.willWaitForEvent) {
             // hasTextToDisplay = false;
@@ -370,6 +388,7 @@ function showQuestionButtons(questionInfo, tooltipText) {
     noButton.classList.add("fade-in");
 
     yesButton.targetIndex = questionInfo[1];
+    yesButton.failedIndex = questionInfo[3];
     noButton.targetIndex = questionInfo[2];
 
     yesToolTip.textContent = tooltipText[0];
@@ -668,6 +687,12 @@ async function setupBubbles(mainFrame) {
     debugMixRatio = document.getElementById("debugMixRatio");
 }
 
+function setupFunctions() {
+    if (levelText[level].functions) {
+        levelFunctions = Object.keys(levelText[level].functions);
+    }
+}
+
 function checkBubbles() {
     if (!isChangingLevel) {
         const anyBubble = mainFrame.querySelector(".bubble:not(.popped)");
@@ -726,9 +751,21 @@ function tick(timestamp) {
     
     if (waitingForEvent || waitingForEventPre) {
         if (timestamp - lastFunctionCheck >= FUNCTION_CHECK_INTERVAL) {
-            if (levelText[level].functions.checkWholeWallPainted(allBubbles, "rgb(255,0,0)", 0.8)) {
-                eventString = "wallPaintedRed";
+            const context = {
+                allBubbles
             }
+
+            for (let funcName of levelFunctions) {
+                if (levelText[level].functions?.[funcName](context)) {
+                    eventString = funcName;
+                }
+            }
+            // if (levelText[level].functions.checkWholeWallPainted(allBubbles, "rgb(255,0,0)", 0.8)) {
+            //     eventString = "wallPaintedRed";
+            // }
+        } 
+        else {
+            lastFunctionCheck = timestamp;
         }
 
         if (timestamp - lastEventCheck >= EVENT_CHECK_INTERVAL) {
@@ -740,7 +777,8 @@ function tick(timestamp) {
                 // doTextPauseForCycles = 0;
                 // levelText[level].textContent.getNextLine();
             }
-        } else {
+        } 
+        else {
             lastEventCheck = timestamp;
         }
     }

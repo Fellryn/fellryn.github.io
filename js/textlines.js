@@ -16,6 +16,7 @@ export class TextLines {
     // 5: line to go to if no.
     // 6: line to go to if "yes" condition is not met. 
     questionAtLine = [];
+    // Denotes 
 
 
     constructor(startIndex, lines, autoNextLine = true, questionAtLine = null, linesNext = -1) {
@@ -56,6 +57,10 @@ export class TextLines {
         }
     }
 
+    get nextLineTarget() {
+        return this.linesNext[this.currentLineIndex];
+    }
+
     getSameLine() {
         return this.lines[this.currentLineIndex - 1];
     }
@@ -67,6 +72,7 @@ export class TextLines {
     get wordIndex() {
         return this.currentLine.wordIndex;
     }
+    
 
     get isLastLine() {
         return this.currentLineIndex == this.lines.length - 1;

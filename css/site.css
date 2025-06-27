@@ -228,7 +228,7 @@ body {
 .talk-panel .talk-button:hover .tooltip-text{
     visibility: visible;
     opacity: 1;
-    transition: opacity 0.2s ease 500ms;
+    transition: opacity 0.2s ease 300ms;
 }
 
 

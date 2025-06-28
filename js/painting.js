@@ -3,7 +3,7 @@ import { getRgbSimilarity, rgbToString, stringToRgb, fileExists } from "./helper
 
 let mouseIsDown = false;
 let bubbleFidelity = 30;
-let level = 1;
+let level = 0;
 const FRAME_SIZE = 600;
 const COVER_TRANSITION_TIME = 250;
 let isChangingLevel = false;
@@ -81,6 +81,7 @@ const worker = new Worker("js/worker.js");
 let levelBackground = [];
 let levelGuideLines = [];
 let levelTarget = [];
+let isExampleShown = false;
 
 
 window.addEventListener("load", (e) => {
@@ -124,6 +125,16 @@ window.addEventListener("load", (e) => {
     const btnPainterView = document.getElementById("btnPainterView");
     if (btnPainterView) {
         setupPainterViewButton(btnPainterView);
+    }
+
+    const btnExample = document.getElementById("btnExample");
+    if (btnExample) {
+        setupExampleButton(btnExample);
+    };
+
+    const btnCheat = document.getElementById("btnCheat");
+    if (btnCheat) {
+        setupCheatButton(btnCheat);
     }
 
     setupScreenChangesListeners();
@@ -210,8 +221,7 @@ function setupTalkArea() {
         talkSkipButton.addEventListener('click', () => {
             if (blockSkipButton) { return; }
             if (waitingForEvent && !hasTextToDisplay) { return; }
-            if (levelText[level].textContent.lineIndex == -1) { return };
-            if (levelText[level].textContent.nextLineTarget == -1) {
+            if (levelText[level].textContent.lineIndex == -1 || levelText[level].textContent.nextLineTarget == -1) {
                 changeLevel(1);
                 return;
             }
@@ -265,6 +275,9 @@ function changeLevel(count) {
     }
 
     setupBubbles(mainFrameRef);
+    setupPaints();
+    setupTalkArea();
+    setupFunctions();
 }
 
 function setTextAreaHeight(calculate = false, height = 0) {
@@ -306,6 +319,10 @@ function updateText() {
             lastEventFinished = false;
             // eventString = levelText[level].textContent.currentLine.eventString;
             // TODO: Optionally hide skip button for some events.
+        }
+        else {
+            waitingForEvent = false;
+            waitingForEventPre = false;
         }
 
         const questionInfo = levelText[level].textContent.isLineQuestion;
@@ -1099,6 +1116,39 @@ function setupPainterViewButton(button) {
     });
 }
 
+function setupExampleButton(button) {
+    isExampleShown = false;
+
+    button.addEventListener('click', () => {
+        isExampleShown = !isExampleShown;
+        toggleExampleOverlay(isExampleShown);
+    });
+}
+
+function setupCheatButton(button) {
+    button.addEventListener('click', () => {
+        for (let i = 0; i < allBubbles.length; i++) {
+
+            const exampleBubbleColor = rgbToString({ r: levelTarget[i][0], g: levelTarget[i][1], b: levelTarget[i][2] });
+            allBubbles[i].bubbleColor = exampleBubbleColor;
+            allBubbles[i].style.backgroundColor = allBubbles[i].bubbleColor;
+        }
+    });
+}
+
+function toggleExampleOverlay(setting) {
+    for (let i = 0; i < allBubbles.length; i++) {
+        if (setting) {
+            const exampleBubbleColor = rgbToString({ r: levelTarget[i][0], g: levelTarget[i][1], b: levelTarget[i][2] });
+            allBubbles[i].style.backgroundColor = exampleBubbleColor;
+        }
+        else {
+            allBubbles[i].style.backgroundColor = allBubbles[i].bubbleColor;
+        }
+    }
+}
+
+
 function setColorOnItem(color) {
     if (item != null) {
         const itemActiveEl = item.querySelector('.active-el');
@@ -1197,6 +1247,11 @@ function checkCollisions() {
 
     // const allBubbles = document.querySelectorAll(".bubble:not(.popped)");
     // const item = document.querySelector('.rolling-pin-middle');
+
+    if (isExampleShown) {
+        isExampleShown = false;
+        toggleExampleOverlay(false);
+    }
 
 
     const nearbyBubbles = [];

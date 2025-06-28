@@ -79,6 +79,7 @@ body {
     flex-direction: column;
     /* align-self: flex-end; */
     width: fit-content;
+    min-width: 100px;
     margin-top: 1rem;
     transition: all 250ms;
     box-shadow: 7px 7px 2px #00000050;

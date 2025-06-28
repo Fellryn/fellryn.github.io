@@ -22,7 +22,7 @@ export const levelText = [
                 /* 10 */ new Line({ text: "Excellent! Now you're all set!" }),
                 /* 11 */ new Line({ text: "If you just paint this whole wall red you'll be all done, let me know when you're finished!", waitForInput: true, inputEvent: "wallPaintedRed", tooltipText: [`"All done chief!`, "How do I paint again?"] }),
                 /* 12 */ new Line({ text: "That's a shame! Well, goodluck and have a nice day! I was after red paint on the entire wall if you're interested...", waitForInput: true, inputEvent: "wallPaintedRed", tooltipText: [`"Fine, here's your red wall!`, `"Na mate, I'm out!"`], charAnimAfter: "question" }),
-                /* 13 */ new Line({ text: "Yep, that's it, nicely done! Now, onto something a bit harder if you're interested! (Press fast forward to go to the next level)", waitForInput: true, inputEvent: "skipButtonPressed" }),
+                /* 13 */ new Line({ text: "Yep, that's it, nicely done! Now, onto something a bit harder if you're interested! (Press fast forward to go to the next level)" }),
                 /* 14 */ new Line({ text: "Woah now, you need more paint than that! Make sure most of the wall is a solid red color, you may need two coats.", charAnimAfter: "exclaim" }),
                 /* 15 */ new Line({ text: "Well, feel free to paint the wall anyway if you want! (Press fast forward to go to the next level)" })
                         ],

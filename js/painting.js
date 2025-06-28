@@ -3,7 +3,7 @@ import { getRgbSimilarity, rgbToString, stringToRgb } from "./helpers.js";
 
 let mouseIsDown = false;
 let bubbleFidelity = 30;
-let level = 0;
+let level = 1;
 const FRAME_SIZE = 600;
 const COVER_TRANSITION_TIME = 250;
 let isChangingLevel = false;
@@ -72,18 +72,23 @@ let lastEventCheck = 0;
 const EVENT_CHECK_INTERVAL = 100;
 let levelFunctions = [];
 let lastFunctionCheck = 0;
-const FUNCTION_CHECK_INTERVAL = 250;
+const FUNCTION_CHECK_INTERVAL = 1000;
 let latestImageRequest = 0;
 
 const worker = new Worker("js/worker.js");
 
 let levelBackground = [];
+let levelGuideLines = [];
+let levelTarget = [];
 
 
 window.addEventListener("load", (e) => {
     mainFrameRef = document.getElementById("mainFrame"); 
     mainFrameRect = mainFrameRef.getBoundingClientRect();
     const mainFrame = document.getElementById("mainFrame");
+
+    if ()
+
     if (mainFrame){
         setupMainFrame(mainFrame);
     }
@@ -92,6 +97,8 @@ window.addEventListener("load", (e) => {
     // if (btnPopAllBubbles) {
     //     setupPopAllBubblesButton(btnPopAllBubbles);
     // }
+
+    setTimeout(() => {
 
     const btnReset = document.getElementById("btnReset");
     if (btnReset) {
@@ -127,6 +134,7 @@ window.addEventListener("load", (e) => {
     setupFunctions();
 
     // checkAllBubbles();
+}, 500);
 });
 
 // async function checkAllBubbles() {
@@ -153,6 +161,8 @@ function setupTalkArea() {
                 }
                 else {
                     levelText[level].textContent.lineIndex = yesButton.targetIndex;
+                    waitingForEvent = false;
+                    waitingForEventPre = false;
                 }
             }
             else {
@@ -186,8 +196,13 @@ function setupTalkArea() {
         });
     }
     
-    if (levelText[level].textContent) {
-        hasTextToDisplay = true;
+    if (levelText.length - 1 >= level) {
+        if (levelText[level].textContent) {
+            hasTextToDisplay = true;
+        }
+    }
+    else {
+        return;
     }
 
     if (talkSkipButton) {
@@ -241,6 +256,13 @@ function showTextArea() {
 
 function changeLevel(count) {
     level += count;
+    window.localStorage.setItem("playerLevel", level);
+    
+    const highestPlayerLevel = Number(window.localStorage.getItem("playerLevel"));
+    if (highestPlayerLevel == null || level > highestPlayerLevel) {
+        window.localStorage.setItem("highestPlayerLevel", highestPlayerLevel);
+    }
+
     setupBubbles(mainFrameRef);
 }
 
@@ -467,20 +489,8 @@ async function setupMainFrame(mainFrame) {
         handleMainFrameMouseMove(e);
     });
 
-    worker.onmessage = (e) => {
-        if (e.data.type === "result") {
-            // console.log(e.data.pixelColors.join())
-            levelBackground = e.data.pixelColors;
-        }
-    };
-
-    // Get level information like background color and where shapes are on the wall.
-    getLevelInformation(); 
-
-    await wait(500);
-
     // Setup bubbles in frame.
-    setupBubbles(mainFrame);
+    await setupBubbles(mainFrame);
 
     // Begin tick loop.
     requestAnimationFrame(tick);
@@ -492,13 +502,31 @@ async function setupMainFrame(mainFrame) {
 }
 
 function getLevelInformation() {
+
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = async () => {
         const bitmap = await createImageBitmap(img);
-        worker.postMessage({ type: "processImage", bitmap }, [bitmap])
+        worker.postMessage({ type: "processBackground", bitmap }, [bitmap])
     };
     img.src = `images/level-images/background-${level + 1}.png`;
+    
+
+    const imgTarget = new Image();
+    imgTarget.crossOrigin = "anonymous";
+    imgTarget.onload = async () => {
+        const bitmap = await createImageBitmap(img);
+        worker.postMessage({ type: "processTarget", bitmap }, [bitmap])
+    };
+    imgTarget.src = `images/level-images/target-${level + 1}.png`;
+
+    const imgGuideLines = new Image();
+    imgGuideLines.crossOrigin = "anonymous";
+    imgGuideLines.onload = async () => {
+        const bitmap = await createImageBitmap(imgGuideLines);
+        worker.postMessage({ type: "processGuidelines", bitmap }, [bitmap])
+    };
+    imgGuideLines.src = `images/level-images/guidelines-${level + 1}.png`;
 }
 
 function setupPaints() {
@@ -648,8 +676,24 @@ async function setupBubbles(mainFrame) {
     
         await wait(COVER_TRANSITION_TIME);
     }
-    
+
     mainFrame.textContent = "";
+
+    worker.onmessage = (e) => {
+        if (e.data.type === "backgroundResult") {
+            // console.log(e.data.pixelColors.join())
+            levelBackground = e.data.pixelColors;
+        }
+
+        if (e.data.type === "guideLinesResult") {
+            levelGuideLines = e.data.shadowInformation;
+        }
+    };
+
+    // Get level information like background color and where shapes are on the wall.
+    getLevelInformation(); 
+
+    await wait(500);
 
     const size = FRAME_SIZE / (bubbleFidelity * 2);
     let totalCount = (FRAME_SIZE / size) * (FRAME_SIZE / size);
@@ -673,7 +717,7 @@ async function setupBubbles(mainFrame) {
 
     for (let i = 0; i < totalCount; i++){
 
-
+        
 
         const newBubble = document.createElement("div");
         newBubble.classList.add("bubble");
@@ -688,6 +732,17 @@ async function setupBubbles(mainFrame) {
         newBubble.bubbleColor = `rgb(${r},${g},${b})`;
         // newBubble.bubbleColor = DEFAULT_BUBBLE_COLOR;
         newBubble.style.backgroundColor = newBubble.bubbleColor;
+
+        if (levelGuideLines.length > 0) {
+            for (let info of levelGuideLines) {
+                if (info.pixel === i) {
+                    // console.log("shadow set on cell " + i);
+                    newBubble.style.boxShadow = "1px 0px 0px #00000020";
+                    newBubble.style.zIndex = "20";
+                    continue;
+                }
+            }
+        }
         
         newBubble.style.width = `${size}px`;
         newBubble.style.height = `${size}px`;
@@ -706,6 +761,8 @@ async function setupBubbles(mainFrame) {
 
         fragment.appendChild(newBubble);
     }
+
+    
 
     mainFrame.appendChild(fragment);
 
@@ -743,8 +800,10 @@ async function setupBubbles(mainFrame) {
 }
 
 function setupFunctions() {
-    if (levelText[level].functions) {
-        levelFunctions = Object.keys(levelText[level].functions);
+    if (levelText.length - 1 >= level) {
+        if (levelText[level].functions) {
+            levelFunctions = Object.keys(levelText[level].functions);
+        }
     }
 }
 
@@ -785,8 +844,10 @@ function tick(timestamp) {
     }
 
     if (bubbleRectNeedsUpdate) {
-        allBubbleRects = new Map(Array.from(allBubbles).map(b => [b, b.getBoundingClientRect()]));
-        bubbleRectNeedsUpdate = false;
+        if (allBubbles != null && allBubbles.length > 0) {
+            allBubbleRects = new Map(Array.from(allBubbles).map(b => [b, b.getBoundingClientRect()]));
+            bubbleRectNeedsUpdate = false;
+        }
     }
 
     if (hasTextToDisplay) {
@@ -815,13 +876,12 @@ function tick(timestamp) {
                     eventString = funcName;
                 }
             }
+
+            lastFunctionCheck = timestamp;
             // if (levelText[level].functions.checkWholeWallPainted(allBubbles, "rgb(255,0,0)", 0.8)) {
             //     eventString = "wallPaintedRed";
             // }
         } 
-        else {
-            lastFunctionCheck = timestamp;
-        }
 
         if (timestamp - lastEventCheck >= EVENT_CHECK_INTERVAL) {
             if (eventString === levelText[level].textContent.currentLine.eventString) {
@@ -832,10 +892,8 @@ function tick(timestamp) {
                 // doTextPauseForCycles = 0;
                 // levelText[level].textContent.getNextLine();
             }
-        } 
-        else {
             lastEventCheck = timestamp;
-        }
+        } 
     }
     
 
@@ -849,6 +907,7 @@ function tick(timestamp) {
 }
 
 async function checkPaint() {
+    if (allBubbles == null || allBubbles.length <= 0) { return; }
     const recentBubbles = Array.from(allBubbles).filter(b => b.dataset.recent !== "0");
     recentBubbles.forEach((bubble) => {
         let currDryness = Number(bubble.dataset.recent);
@@ -932,8 +991,9 @@ function setupBlueButton(button) {
 function setupPainterViewButton(button) {
     button.isOn = false;
 
-    const halfCoverElement = document.querySelector(".half-cover");
+    
     button.addEventListener('click', () => {
+        const halfCoverElement = document.querySelector(".half-cover");
         button.isOn = !button.isOn;
         if (button.isOn) {
             halfCoverElement.classList.remove("fade-out");

@@ -164,6 +164,7 @@ function setupTalkArea() {
     const talkSkipButton = document.getElementById("btnTalkSkip");
     const yesButton = document.getElementById("btnTalkYes");
     const noButton = document.getElementById("btnTalkNo");
+    talkTextArea.textContent = "";
 
     if (yesButton) {
         yesButton.addEventListener('click', () => {

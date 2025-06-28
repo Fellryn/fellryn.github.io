@@ -39,6 +39,10 @@
     transition: opacity 200ms;
 }
 
+.image-placeholder.paint-bucket.hidden {
+    display: none;
+}
+
 .image-placeholder.paint-bucket:hover .will-hide{
     opacity: 0.2;
 }

@@ -42,6 +42,7 @@ let itemMoveSpeed = 500;
 let itemRect = null;
 const MAX_SATURATION = 20000;
 let saturationLevelPerTick = 1;
+let bucketController = new AbortController();
 
 let lastMouseX = 0;
 let lastMouseY = 0;
@@ -545,40 +546,101 @@ function getLevelInformation() {
 }
 
 function setupPaints() {
-    const redPaintPlaceholder = document.getElementById("paintBucketRedPlaceholder");
+    const paintSideBar = document.getElementById("paintSideBar");
+    const paintPlaceHolders = paintSideBar.querySelectorAll(".paint-bucket");
 
-    const allPaints = [redPaintPlaceholder];
 
-    allPaints.forEach((paint) => {
-        paint.amount = 100;
-        paint.activeEls = redPaintPlaceholder.querySelectorAll(".active-el");
-    });
+    // const redPaintPlaceholder = document.getElementById("paintBucketOnePlaceholder");
 
-    if (redPaintPlaceholder) {
-        redPaintPlaceholder.addEventListener('click', () => {
-            // currentColor = "rgb(255,0,0)";
-            // setColorOnItem(currentColor);
+    // const allPaints = [paintBucketOnePlaceholder];
 
-            const colorSimilarity = getRgbSimilarity(item.currColor, "rgb(255,0,0)");
+    const colorsForLevel = levelText[level].colors;
+    const colorCount = colorsForLevel.length;
+
+    // paintPlaceHolders.forEach((paint) => {
+
+    
+
+        
+    // });
+    bucketController.abort();
+    bucketController = new AbortController();
+
+    for (let i = 0; i < colorCount; i++) {
+        
+
+        const currentBucket = paintPlaceHolders[i];
+        const currentBucketColor = colorsForLevel[i];
+        const { r, g, b } = stringToRgb(currentBucketColor);
+        const [rl, gl, bl] = [r, g, b].map(v => v + 30);
+        const [rd, gd, bd] = [r, g, b].map(v => v - 30);
+        const currentBucketColorLighter = rgbToString({r: rl, g: gl, b: bl});
+        const currentBucketColorDarker = rgbToString({r: rd, g: gd, b: bd});
+
+        currentBucket.amount = 100;
+        currentBucket.bucketColor = currentBucketColor;
+        currentBucket.activeEls = currentBucket.querySelectorAll(".active-el");
+        currentBucket.classList.remove("hidden");
+
+        currentBucket.querySelector(".paint-bucket-label").style.backgroundColor = currentBucketColor;
+        currentBucket.activeEls[0].style.backgroundColor = currentBucketColorLighter;
+        currentBucket.activeEls[1].style.background = `linear-gradient(90deg, ${currentBucketColorDarker} 0%, ${currentBucketColor} 22%, ${currentBucketColor} 78%, ${currentBucketColorDarker} 100%`;    
+        
+        currentBucket.addEventListener('click', () => {
+            const colorSimilarity = getRgbSimilarity(item.currColor, currentBucketColor);
             if (colorSimilarity > COLOR_SIMILARITY_THRESHOLD || item.querySelector(".active-el").origColor == currentColor) {
 
                 const amountLoss = 1 - (item.saturationLevel / MAX_SATURATION);
-                redPaintPlaceholder.amount -= amountLoss * AMOUNT_LOSS_MULTIPLIER;
-                const newTopOffset = Math.abs(((redPaintPlaceholder.amount / 100) * (FULL_PAINT_OFFSET - EMPTY_PAINT_OFFSET)) - (FULL_PAINT_OFFSET - EMPTY_PAINT_OFFSET));
+                currentBucket.amount -= amountLoss * AMOUNT_LOSS_MULTIPLIER;
+                const newTopOffset = Math.abs(((currentBucket.amount / 100) * (FULL_PAINT_OFFSET - EMPTY_PAINT_OFFSET)) - (FULL_PAINT_OFFSET - EMPTY_PAINT_OFFSET));
 
-                redPaintPlaceholder.activeEls.forEach((el) => {
+                currentBucket.activeEls.forEach((el) => {
                     el.style.top = newTopOffset + "px";
                 });
-                currentColor =  "rgb(255,0,0)";
+                currentColor = currentBucketColor;
                 setColorOnItem(currentColor);
 
                 if (waitingForEvent || waitingForEventPre) {
                     eventString = "putPaintOnTool";
                 }
             }
-        });
+        }, { signal: bucketController.signal })
     }
+
+
+
+
+
+
+    // if (redPaintPlaceholder) {
+    //     redPaintPlaceholder.addEventListener('click', () => {
+    //         // currentColor = "rgb(255,0,0)";
+    //         // setColorOnItem(currentColor);
+
+    //         const colorSimilarity = getRgbSimilarity(item.currColor, "rgb(255,0,0)");
+    //         if (colorSimilarity > COLOR_SIMILARITY_THRESHOLD || item.querySelector(".active-el").origColor == currentColor) {
+
+    //             const amountLoss = 1 - (item.saturationLevel / MAX_SATURATION);
+    //             redPaintPlaceholder.amount -= amountLoss * AMOUNT_LOSS_MULTIPLIER;
+    //             const newTopOffset = Math.abs(((redPaintPlaceholder.amount / 100) * (FULL_PAINT_OFFSET - EMPTY_PAINT_OFFSET)) - (FULL_PAINT_OFFSET - EMPTY_PAINT_OFFSET));
+
+    //             redPaintPlaceholder.activeEls.forEach((el) => {
+    //                 el.style.top = newTopOffset + "px";
+    //             });
+    //             currentColor =  "rgb(255,0,0)";
+    //             setColorOnItem(currentColor);
+
+    //             if (waitingForEvent || waitingForEventPre) {
+    //                 eventString = "putPaintOnTool";
+    //             }
+    //         }
+    //     });
+    // }
     
+}
+
+function putColorOnItem() {
+
 }
 
 function setupPaintItems() {
@@ -1018,7 +1080,7 @@ function setupPainterViewButton(button) {
         if (button.isOn) {
             halfCoverElement.classList.remove("fade-out");
             halfCoverElement.classList.add("fade-in");
-            halfCoverElement.style.zIndex = "10";
+            halfCoverElement.style.zIndex = "50";
         }
         else {
             halfCoverElement.classList.add("fade-out");

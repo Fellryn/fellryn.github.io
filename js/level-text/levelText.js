@@ -49,7 +49,8 @@ export const levelText = [
                 return isAllColor;
             }
         }
-
+        ,
+        colors: ["rgb(237,28,36)"]
     },
     {
         textContent:
@@ -86,6 +87,8 @@ export const levelText = [
                 return isAllColor;
             }
         }
+        ,
+        colors: ["rgb(237,28,36)", "rgb(0, 162, 232)"]
     }
 
 ]

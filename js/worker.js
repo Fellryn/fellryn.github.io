@@ -10,12 +10,13 @@ onmessage = (e) => {
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = imageData.data;
 
-        let pixelColours = [];
+        let pixelColors = [];
         for (let i = 0; i < data.length; i += 4) {
             const [r, g, b] = [data[i], data[i + 1], data[i + 2]];
-            pixelColours.push(`rgb(${r},${g},${b})`);
+            // pixelColors.push(`rgb(${r},${g},${b})`);
+            pixelColors.push([r, g, b]);
         }
 
-        postMessage({ type: "result", pixelColours });
+        postMessage({ type: "result", pixelColors });
     }
 };

@@ -75,7 +75,9 @@ let lastFunctionCheck = 0;
 const FUNCTION_CHECK_INTERVAL = 250;
 let latestImageRequest = 0;
 
-const worker = new Worker("worker.js");
+const worker = new Worker("js/worker.js");
+
+let levelBackground = [];
 
 
 window.addEventListener("load", (e) => {
@@ -447,7 +449,7 @@ function doUIRefresh() {
     }
 }
 
-function setupMainFrame(mainFrame) {
+async function setupMainFrame(mainFrame) {
     // Setup clicking/dragging events.
     mainFrame.addEventListener('click', (e) => {
         handleMainFrameClick(e);
@@ -467,12 +469,15 @@ function setupMainFrame(mainFrame) {
 
     worker.onmessage = (e) => {
         if (e.data.type === "result") {
-            console.log(e.data.pixelColors.join())
+            // console.log(e.data.pixelColors.join())
+            levelBackground = e.data.pixelColors;
         }
     };
 
     // Get level information like background color and where shapes are on the wall.
     getLevelInformation(); 
+
+    await wait(500);
 
     // Setup bubbles in frame.
     setupBubbles(mainFrame);
@@ -493,7 +498,7 @@ function getLevelInformation() {
         const bitmap = await createImageBitmap(img);
         worker.postMessage({ type: "processImage", bitmap }, [bitmap])
     };
-    img.src = `images/level-images/background-${level}.png`;
+    img.src = `images/level-images/background-${level + 1}.png`;
 }
 
 function setupPaints() {
@@ -668,12 +673,20 @@ async function setupBubbles(mainFrame) {
 
     for (let i = 0; i < totalCount; i++){
 
+
+
         const newBubble = document.createElement("div");
         newBubble.classList.add("bubble");
 
         // const bubbleStyle = window.getComputedStyle(newBubble);
         // const backgroundColor = bubbleStyle.backgroundColor;
-        newBubble.bubbleColor = DEFAULT_BUBBLE_COLOR;
+
+        const r = levelBackground[i][0];
+        const g = levelBackground[i][1];
+        const b = levelBackground[i][2];
+
+        newBubble.bubbleColor = `rgb(${r},${g},${b})`;
+        // newBubble.bubbleColor = DEFAULT_BUBBLE_COLOR;
         newBubble.style.backgroundColor = newBubble.bubbleColor;
         
         newBubble.style.width = `${size}px`;

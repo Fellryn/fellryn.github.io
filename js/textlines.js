@@ -98,8 +98,8 @@ export class TextLines {
 
 export class Line {
     text = "";
-    delayAfterWhole = 200;
-    delayAfterWord = 200;
+    delayAfterWhole = 15;
+    delayAfterWord = 1;
     textWords = [];
     tooltipText = [];
     wordCount = 0;
@@ -108,8 +108,11 @@ export class Line {
     textHalfPunctuationPositions = [];
     waitForEvent = false;
     inputEvent = "";
+    char = 1;
+    charAnim = "talking";
+    charAnimAfter = "idle";
 
-    constructor ({ text = "", delayAfterWhole = 200, waitForInput = false, inputEvent = "", tooltipText = [], delayAfterWord = 120 } = {}) {
+    constructor ({ text = "", delayAfterWhole = 15, waitForInput = false, inputEvent = "", tooltipText = [], delayAfterWord = 1, char = 1, charAnim = "talking", charAnimAfter = "idle" } = {}) {
         this.text = text;
         this.delayAfterWhole = delayAfterWhole;
         this.delayAfterWord = delayAfterWord;
@@ -118,6 +121,9 @@ export class Line {
         this.tooltipText = tooltipText;
         this.waitForEvent = waitForInput;
         this.inputEvent = inputEvent;
+        this.char = char;
+        this.charAnim = charAnim;
+        this.charAnimAfter = charAnimAfter;
 
         for (let i = 0; i < this.wordCount; i ++) {
             const punctation = this.textWords[i].match(/[.,!?;:]/);
@@ -160,6 +166,18 @@ export class Line {
 
     get wordIndex() {
         return this.currentIndex;
+    }
+
+    get char() {
+        return this.char;
+    }
+
+    get charAnim() {
+        return this.charAnim;
+    }
+
+    get charAnimAfter() {
+        return this.charAnimAfter;
     }
 
     get delayAfterWord() {

@@ -73,7 +73,9 @@ const EVENT_CHECK_INTERVAL = 100;
 let levelFunctions = [];
 let lastFunctionCheck = 0;
 const FUNCTION_CHECK_INTERVAL = 250;
+let latestImageRequest = 0;
 
+const worker = new Worker("worker.js");
 
 
 window.addEventListener("load", (e) => {
@@ -269,6 +271,7 @@ function updateText() {
     // Check line first once for special details like is it a question, functions etc.
 
     if (!hasDoneFirstCheck && levelText[level].textContent.currentLine != null) {
+        setCharacterImage(levelText[level].textContent.currentLine.char, levelText[level].textContent.currentLine.charAnim);
         levelText[level].textContent.currentLine.wordIndex = 0;
         talkTextArea.textContent = "";
         hasDoneFirstCheck = true;
@@ -293,6 +296,7 @@ function updateText() {
     if (lineIndex == -1 ||
         (levelText[level].textContent.lines[lineIndex].isLastWord && levelText[level].textContent.isLastLine)) { 
         hasTextToDisplay = false;
+        setCharacterImage(levelText[level].textContent.currentLine.char, levelText[level].textContent.currentLine.charAnimAfter);
         return;
     } 
     // If its the last word, but not the last line, get the delay and the next word.
@@ -305,6 +309,7 @@ function updateText() {
         if (questionInfo != null ) {
             // const tooltipText = levelText[level].textContent.currentLine.tooltipText;
             hasTextToDisplay = false;
+            setCharacterImage(levelText[level].textContent.currentLine.char, levelText[level].textContent.currentLine.charAnimAfter);
             // showQuestionButtons(questionInfo, tooltipText);
             return;
         }
@@ -313,6 +318,7 @@ function updateText() {
         if (levelText[level].textContent.currentLine.willWaitForEvent && !lastEventFinished) {
             hasTextToDisplay = false;
             if (!lastEventFinished) {
+                setCharacterImage(levelText[level].textContent.currentLine.char, levelText[level].textContent.currentLine.charAnimAfter);
                 waitingForEvent = true;
                 return;
             }
@@ -323,12 +329,14 @@ function updateText() {
         // If there is a delay, cause the delay and get the next line.
         if (delayBeforeNextLine) {
             doTextPauseForCycles = delayBeforeNextLine;
+            setCharacterImage(levelText[level].textContent.currentLine.char, levelText[level].textContent.currentLine.charAnimAfter);
             levelText[level].textContent.getNextLine();
             hasDoneFirstCheck = false;
             return;
         // If there is no delay, then go straight to the next line.
         }
         else {
+            setCharacterImage(levelText[level].textContent.currentLine.char, levelText[level].textContent.currentLine.charAnimAfter);
             levelText[level].textContent.getNextLine();
             hasDoneFirstCheck = false;
             return;
@@ -395,6 +403,21 @@ function showQuestionButtons(questionInfo, tooltipText) {
     noToolTip.textContent = tooltipText[1];
 }
 
+function setCharacterImage(char, charAnim) {
+    const requestTime = Date.now();
+    latestImageRequest = requestTime;
+    
+    const image = document.getElementById("talkGraphicImage");
+    const preload = new Image();
+    preload.onload = () => {
+        if (requestTime === latestImageRequest) {
+            image.setAttribute("src", preload.src);
+        }
+    }
+
+    preload.src = `images/${charAnim}-char${char}.gif`;
+}
+
 
 function setupScreenChangesListeners() {
     let resizeTimeout;
@@ -442,6 +465,8 @@ function setupMainFrame(mainFrame) {
         handleMainFrameMouseMove(e);
     });
 
+    getLevelInformation(); 
+
     // Setup bubbles in frame.
     setupBubbles(mainFrame);
 
@@ -452,6 +477,16 @@ function setupMainFrame(mainFrame) {
     setupPaintItems();
 
 
+}
+
+function getLevelInformation() {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = async () => {
+        const bitmap = await createImageBitmap(img);
+        worker.postMessage({ type: "processImage", bitmap }, [bitmap])
+    };
+    img.src = `images/level-images/background-${level}.png`;
 }
 
 function setupPaints() {

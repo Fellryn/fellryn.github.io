@@ -465,6 +465,13 @@ function setupMainFrame(mainFrame) {
         handleMainFrameMouseMove(e);
     });
 
+    worker.onmessage = (e) => {
+        if (e.data.type === "result") {
+            console.log(e.data.pixelColors.join())
+        }
+    };
+
+    // Get level information like background color and where shapes are on the wall.
     getLevelInformation(); 
 
     // Setup bubbles in frame.

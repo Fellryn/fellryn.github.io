@@ -49,6 +49,44 @@ export const levelText = [
                 return isAllColor;
             }
         }
+
+    },
+    {
+        textContent:
+            new TextLines(
+                {
+                    lines:
+                        [
+                            new Line({ text: "Welcome back!" }),
+                            new Line({ text: "This one is a little trickier! You may have noticed the second colour there..." }),
+                            new Line({ text: "The client would like red and blue stripes on the wall, starting with red on the left-most panel. You should be able to see the lines separating the sections. Let us know when you're finished!", waitForInput: true, inputEvent: "wallMatchesTarget", tooltipText: [`The stripes are up!`, `Any other advice?`], charAnimAfter: "question" }),
+                            new Line({ text: "Perfect! I think that's the finest stripes I've ever seen! (Press fast forward to go to the next level)" }),
+                            new Line({ text: "Nice try! But you might need some more paint, or maybe those lines aren't straight enough! Give it another go."})
+                        ],
+                        questionAtLine: [[2, 3, 1, 4], []],
+                        linesNext: [1, 2, 3, -1, -1]
+                }
+            ),
+        functions: {
+            wallMatchesTarget({ allBubbles, levelTarget }) {
+                let isAllColor = true;
+                let maxMissedBubbles = 15;
+                const bubbleCount = allBubbles.length;
+                for (let i = 0; i < bubbleCount; i++) {
+                    const targetRgbString = rgbToString({ r: levelTarget[i][0], g: levelTarget[i][1], b: levelTarget[i][2] });
+                    if (getRgbSimilarity(allBubbles[i].bubbleColor, targetRgbString) < 0.75) {
+                        maxMissedBubbles--;
+                        // console.log(`Broke on ${b.x}, ${b.y}: Color ${b.bubbleColor}`);
+                        if (maxMissedBubbles <= 0) {
+                            isAllColor = false;
+                            break;
+                        }
+                    }
+                }
+                return isAllColor;
+            }
+        }
     }
+
 ]
 

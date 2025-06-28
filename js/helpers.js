@@ -18,3 +18,13 @@ export function stringToRgb(color) {
     const [r, g, b] = color.match(/\d+/g).map(Number);
     return {r, g, b};
 }
+
+export async function fileExists(url) {
+    try {
+        const response = await fetch(url, { method: "HEAD" });
+        return response.ok;
+    } 
+    catch (err) {
+        return false;
+    }
+}

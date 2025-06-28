@@ -1,5 +1,5 @@
 import { levelText } from "./level-text/levelText.js";
-import { getRgbSimilarity, rgbToString, stringToRgb } from "./helpers.js";
+import { getRgbSimilarity, rgbToString, stringToRgb, fileExists } from "./helpers.js";
 
 let mouseIsDown = false;
 let bubbleFidelity = 30;
@@ -87,7 +87,7 @@ window.addEventListener("load", (e) => {
     mainFrameRect = mainFrameRef.getBoundingClientRect();
     const mainFrame = document.getElementById("mainFrame");
 
-    if ()
+    // if ()
 
     if (mainFrame){
         setupMainFrame(mainFrame);
@@ -503,30 +503,45 @@ async function setupMainFrame(mainFrame) {
 
 function getLevelInformation() {
 
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = async () => {
-        const bitmap = await createImageBitmap(img);
-        worker.postMessage({ type: "processBackground", bitmap }, [bitmap])
-    };
-    img.src = `images/level-images/background-${level + 1}.png`;
+    const imgSource = `images/level-images/background-${level + 1}.png`;
+    fileExists(imgSource).then(exists => {
+        if (exists) {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = async () => {
+                const bitmap = await createImageBitmap(img);
+                worker.postMessage({ type: "processBackground", bitmap }, [bitmap])
+            };
+            img.src = imgSource;
+        }
+    });
+
+
+    const targetSource = `images/level-images/target-${level + 1}.png`;
+    fileExists(targetSource).then(exists => {
+        if (exists) {
+            const imgTarget = new Image();
+            imgTarget.crossOrigin = "anonymous";
+            imgTarget.onload = async () => {
+                const bitmap = await createImageBitmap(imgTarget);
+                worker.postMessage({ type: "processTarget", bitmap }, [bitmap])
+            };
+            imgTarget.src = targetSource;
+        }
+    });
     
-
-    const imgTarget = new Image();
-    imgTarget.crossOrigin = "anonymous";
-    imgTarget.onload = async () => {
-        const bitmap = await createImageBitmap(img);
-        worker.postMessage({ type: "processTarget", bitmap }, [bitmap])
-    };
-    imgTarget.src = `images/level-images/target-${level + 1}.png`;
-
-    const imgGuideLines = new Image();
-    imgGuideLines.crossOrigin = "anonymous";
-    imgGuideLines.onload = async () => {
-        const bitmap = await createImageBitmap(imgGuideLines);
-        worker.postMessage({ type: "processGuidelines", bitmap }, [bitmap])
-    };
-    imgGuideLines.src = `images/level-images/guidelines-${level + 1}.png`;
+    const guideLineSource = `images/level-images/guidelines-${level + 1}.png`;
+    fileExists(guideLineSource).then(exists => {
+        if (exists) {
+            const imgGuideLines = new Image(); 
+            imgGuideLines.crossOrigin = "anonymous";
+            imgGuideLines.onload = async () => {
+                const bitmap = await createImageBitmap(imgGuideLines);
+                worker.postMessage({ type: "processGuidelines", bitmap }, [bitmap])
+            };
+            imgGuideLines.src = guideLineSource;
+        }
+    });
 }
 
 function setupPaints() {
@@ -687,6 +702,10 @@ async function setupBubbles(mainFrame) {
 
         if (e.data.type === "guideLinesResult") {
             levelGuideLines = e.data.shadowInformation;
+        }
+
+        if (e.data.type === "targetResult") {
+            levelTarget = e.data.pixelColors;
         }
     };
 
@@ -868,7 +887,8 @@ function tick(timestamp) {
     if (waitingForEvent || waitingForEventPre) {
         if (timestamp - lastFunctionCheck >= FUNCTION_CHECK_INTERVAL) {
             const context = {
-                allBubbles
+                allBubbles,
+                levelTarget
             }
 
             for (let funcName of levelFunctions) {

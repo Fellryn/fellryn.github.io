@@ -56,7 +56,7 @@ onmessage = (e) => {
             // pixelColors.push(`rgb(${r},${g},${b})`);
             pixelColors.push([r, g, b]);
         }
-        return pixelColors;
+        postMessage({ type: "targetResult", pixelColors});
     }
 };
 

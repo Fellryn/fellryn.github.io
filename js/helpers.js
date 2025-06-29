@@ -1,8 +1,21 @@
 export const shadowSettings = Object.freeze({
+    "N": "0px -1px 0px",
+    "NE": "1px -1px 0px",
     "E": "1px 0px 0px",
-    "W": "-1px 0px 0px",
+    "SE": "1px 1px 0px",
     "S": "0px 1px 0px",
-    "SW": "1px 1px 0px"
+    "SW": "-1px 1px 0px",
+    "W": "-1px 0px 0px",
+    "NW": "-1px -1px 0px",
+
+    "ND": "0px -3px 0px",
+    "NED": "2px -3px 0px",
+    "ED": "2px 0px 0px",
+    "SED": "2px 3px 0px",
+    "SD": "0px 3px 0px",
+    "SWD": "-2px 3px 0px",
+    "WD": "-2px 0px 0px",
+    "NWD": "-2px -3px 0px"
 });
 
 export function getRgbSimilarity(c1, c2) {

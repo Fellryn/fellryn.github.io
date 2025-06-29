@@ -254,8 +254,11 @@ function setupTalkArea() {
             if (waitingForEvent && !hasTextToDisplay) { return; }
             if ((levelText[level].textContent.lineIndex == -1 || 
                 (levelText[level].textContent.nextLineTarget == -1) && levelText[level].textContent.currentLine.isLastWord)) {
-                changeLevel(1);
-                return;
+                    if (level < levelText.length -1)
+                    {
+                        changeLevel(1);
+                        return;
+                    }
             }
             if (!hasTextToDisplay) { return; }
 
@@ -668,7 +671,7 @@ function setupPaints() {
         
         currentBucket.addEventListener('click', () => {
             
-            if (currentBucket.amount <= MINIMUM_BUCKET_PERCENT) {
+            if (currentBucket.amount <= MINIMUM_BUCKET_PERCENT || item == null) {
                 return;
                 // TODO: Show message informing bucket is empty.
             }
@@ -692,7 +695,7 @@ function setupPaints() {
                 else {
                     currentBucket.amount -= amountLoss * AMOUNT_LOSS_MULTIPLIER;
                 }
-                console.log("Bucket %: " + currentBucket.amount);
+                // console.log("Bucket %: " + currentBucket.amount);
 
                 // Get the new height of the paint in the bucket - Give it the percentage of paint left (0 - 100);
                 const newTopOffset = calculateBucketPaintHeight(currentBucket.amount);
@@ -1245,9 +1248,6 @@ function toggleExampleOverlay(setting) {
         }
     }
 }
-
-
-
 
 function handleMainFrameClick(e) {
     // const target = e.target;

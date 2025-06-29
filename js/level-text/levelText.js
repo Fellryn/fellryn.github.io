@@ -98,7 +98,7 @@ export const levelText = [
                         [
                             new Line({ text: "Well, we're really getting into it now..." }),
                             new Line({ text: "This client has heard all about your expert skills and wants something a little more peculiar." }),
-                            new Line({ text: "Let me know when you've finished with the squares please, good luck!", waitForInput: true, inputEvent: "wallMatchesTarget", tooltipText: [`The stripes are up!`, `Any other advice?`], charAnimAfter: "question" }),
+                            new Line({ text: "Let me know when you've finished with the squares please, good luck!", waitForInput: true, inputEvent: "wallMatchesTarget", tooltipText: [`Those bloody squares are done!`, `Come again boss?`], charAnimAfter: "question" }),
                             new Line({ text: "You've done it again! Absolutely outstanding! We might have to start charging more! (Press fast forward to go to the next level)" }),
                             new Line({ text: "So closeeee! Check those edges and maybe some more paint on the dark bits!"})
                         ],
@@ -127,6 +127,59 @@ export const levelText = [
         }
         ,
         colors: ["rgb(240, 174, 201)", "rgb(247, 247, 247)"]
+    },
+    {
+        textContent:
+            new TextLines(
+                {
+                    lines:
+                        [
+                            new Line({ text: "Woah now doggy! You've come quite a ways now haven't ya!" }),
+                            new Line({ text: "We got something a little trickier for you. This time, we can't touch the glass at all! " }),
+                            new Line({ text: "If you do, the owner won't be happy and we'll be thrown out for sure! You might have to break out those smaller brushes this time." }),
+                            new Line({ text: "I've supplied some brown paint for the frame if you overlap that a little bit, but for heavens sake, do not hit the glass! Otherwise, its just a green two-tone piece, nothing complicated. Let me know when you're done!", waitForInput: true, inputEvent: "wallMatchesTarget", tooltipText: [`Phew, it's done!`, `Any other advice?`], charAnimAfter: "question" }),
+                            new Line({ text: "Well shiver me timbers, you've absolutely nailed it again! And you didn't even touch the glass, now thats an expert. (Press fast forward to go to the next level)" }),
+                            new Line({ text: "Might need some touch ups on the frame, or maybe the green wall hasn't got enough coats, or the trim is off? What do you think?"})
+                        ],
+                        questionAtLine: [[3, 4, 1, 4], []],
+                        linesNext: [1, 2, 3, 4, -1, 2]
+                }
+            ),
+        functions: {
+            wallMatchesTarget({ allBubbles, levelTarget }) {
+                let isAllColor = true;
+                let maxMissedBubbles = 15;
+                const bubbleCount = allBubbles.length;
+                for (let i = 0; i < bubbleCount; i++) {
+                    const targetRgbString = rgbToString({ r: levelTarget[i][0], g: levelTarget[i][1], b: levelTarget[i][2] });
+                    if (getRgbSimilarity(allBubbles[i].bubbleColor, targetRgbString) < 0.75) {
+                        maxMissedBubbles--;
+                        // console.log(`Broke on ${b.x}, ${b.y}: Color ${b.bubbleColor}`);
+                        if (maxMissedBubbles <= 0) {
+                            isAllColor = false;
+                            break;
+                        }
+                    }
+                }
+                return isAllColor;
+            }
+        }
+        ,
+        colors: ["rgb(92, 116, 87)", "rgb(33, 78, 52)", "rgb(239, 183, 67)"]
+    },
+        {
+        textContent:
+            new TextLines(
+                {
+                    lines:
+                        [
+                            new Line({ text: "Well that's it for now bucko!" }),
+                            new Line({ text: "If you wanna keep painting go right ahead, I'll give you a few paints."}),
+                            new Line({ text: "Otherwise, thanks for playing! Feel free to leave a note on Github if you enjoyed this or have any suggestions. Thanks!", waitForInput: true, inputEvent: "gameOver"})
+                        ],
+                }
+            ),
+        colors: ["rgb(190, 23, 23)", "rgb(23, 20, 196)", "rgb(26, 192, 20)", "rgb(218, 233, 14)", "rgb(192, 19, 207)"]
     }
 
 

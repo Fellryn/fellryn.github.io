@@ -94,7 +94,7 @@ export class TextLines {
     }
 
     get isLineQuestion() {
-        if (this.questionAtLine.length == 0) {
+        if (this.questionAtLine == null || this.questionAtLine.length == 0) {
             return null;
         }
         const questionMatch = this.questionAtLine.find(q => q[0] == this.currentLineIndex);

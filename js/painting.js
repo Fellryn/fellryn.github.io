@@ -723,8 +723,6 @@ function calculateBucketPaintHeight(amount) {
     return Math.abs(((amount / 100) * (FULL_PAINT_OFFSET - EMPTY_PAINT_OFFSET)) - (FULL_PAINT_OFFSET - EMPTY_PAINT_OFFSET));
 }
 
-
-
 function setupPaintItems() {
     itemsController.abort();
     itemsController = new AbortController();
@@ -1536,8 +1534,6 @@ function mixRgb(c1, c2, ratio = 0.5) {
     };
     return rgbToString(mixedColour);
 }
-
-
 
 
 function wait(ms) {

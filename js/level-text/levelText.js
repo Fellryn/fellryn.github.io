@@ -175,7 +175,8 @@ export const levelText = [
                         [
                             new Line({ text: "Well that's it for now bucko!" }),
                             new Line({ text: "If you wanna keep painting go right ahead, I'll give you a few paints."}),
-                            new Line({ text: "Otherwise, thanks for playing! Feel free to leave a note on Github if you enjoyed this or have any suggestions. Thanks!", waitForInput: true, inputEvent: "gameOver"})
+                            new Line({ text: "More levels and features might be added if I feel like it. And bug fixes as well! I especially want to work on the performance of the app."}),
+                            new Line({ text: "Anyhow, thanks for playing! Feel free to leave a note on Github if you enjoyed this or have any suggestions. Thanks!", waitForInput: true, inputEvent: "gameOver"})
                         ],
                 }
             ),

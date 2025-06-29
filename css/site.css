@@ -78,7 +78,7 @@ body {
     width: fit-content;
     margin-top: 1rem;
     transition: all 250ms;
-    box-shadow: inset();
+    /* box-shadow: inset(); */
     box-shadow: -7px 7px 2px #00000050;
 }
 
@@ -90,6 +90,33 @@ body {
     margin-top: 1rem;
     transition: all 250ms;
     box-shadow: 7px 7px 2px #00000050;
+}
+
+.ingame-menu.target-side-bar {
+    margin-top: 1rem;
+    box-shadow: -7px 7px 2px #00000050;
+}
+
+.ingame-menu.target-side-bar p {
+    text-align: center;
+}
+
+.ingame-menu.target-side-bar img {
+    margin-left: 1rem;
+    margin-top: 0.25rem;
+    border-radius: 5px;
+    /* visibility: hidden; */
+}
+
+.ingame-menu.target-side-bar img.fade-out {
+    animation: fade-out 250ms linear;
+    animation-fill-mode: forwards;
+}
+
+.ingame-menu.target-side-bar img.fade-in {
+    animation: fade-in 250ms linear;
+    animation-fill-mode: forwards;
+    /* visibility: visible; */
 }
 
 .column.container {
@@ -139,8 +166,8 @@ body {
     margin-top: 2rem;
     max-width: 600px;
     min-width: 600px;
-    max-height: 400px;
-    min-height: 400px;
+    /* max-height: 400px;
+    min-height: 400px; */
     align-self: center;
     /* margin-left: 20px; */
 
@@ -310,7 +337,6 @@ body {
     /* pointer-events: none; */
     visibility: hidden;
     transform: translateX(-50%) translateY(-50%);
-    background-color: whitesmoke;
 }
 
 .level-select-panel {
@@ -323,6 +349,8 @@ body {
     padding: 0.2rem;
     gap: 0.5rem;   
     width: fit-content;
+    background-color: whitesmoke;
+    box-shadow: 0px 5px 3px 2px #00000050;
 }
 
 .level-select-panel p {

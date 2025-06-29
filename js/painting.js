@@ -45,6 +45,7 @@ const MAX_SATURATION = 20000;
 let saturationLevelPerTick = 1;
 let itemsController = new AbortController();
 let bucketController = new AbortController();
+const MINIMUM_BUCKET_PERCENT = 46;
 
 let lastMouseX = 0;
 let lastMouseY = 0;
@@ -213,7 +214,7 @@ function setupTalkArea() {
             yesButton.classList.add("fade-out");
             noButton.classList.remove("fade-in");
             noButton.classList.add("fade-out");
-        }, {AbortController: talkAreaController});
+        }, {signal: talkAreaController.signal});
     }
 
     if (noButton) {
@@ -229,7 +230,7 @@ function setupTalkArea() {
             noButton.classList.add("fade-out");
             yesButton.classList.remove("fade-in");
             yesButton.classList.add("fade-out");
-        }, {AbortController: talkAreaController});
+        }, {signal: talkAreaController.signal});
     }
     
     if (levelText.length - 1 >= level) {
@@ -282,7 +283,7 @@ function setupTalkArea() {
                 //     return;
                 // };
             }
-        }, {AbortController: talkAreaController});
+        }, {signal: talkAreaController.signal});
     }
 }
 
@@ -301,21 +302,21 @@ function changeLevel(count, absolute = false) {
     const levelLabel = document.getElementById("lblCurrentLevel");
     levelLabel.textContent = `Level: ${level + 1}`;
     
-    const highestPlayerLevel = Number(window.localStorage.getItem("playerLevel"));
+    const highestPlayerLevel = Number(window.localStorage.getItem("highestPlayerLevel"));
     if (highestPlayerLevel == null || level > highestPlayerLevel) {
-        window.localStorage.setItem("highestPlayerLevel", highestPlayerLevel);
+        window.localStorage.setItem("highestPlayerLevel", level);
     }
 
+    const targetImageSource = `/images/level-images/target-${level + 1}.png`;
+    document.getElementById("targetImage").setAttribute("src", targetImageSource);
 
     // setupPaintItems();
     refreshPaintItems();
-
-
-
     setupBubbles(mainFrameRef);
     setupPaints();
     setupTalkArea();
     setupFunctions();
+    swapTargetImage();
 }
 
 function setTextAreaHeight(calculate = false, height = 0) {
@@ -498,6 +499,18 @@ function setCharacterImage(char, charAnim) {
     preload.src = `images/${charAnim}-char${char}.gif`;
 }
 
+function swapTargetImage() {
+    const targetImage = document.getElementById("targetImage");
+    targetImage.classList.remove("fade-in");
+    targetImage.classList.add("fade-out");
+
+    setTimeout(() => {
+        const targetImageSource = `/images/level-images/target-${level + 1}.png`;
+        targetImage.setAttribute("src", targetImageSource);
+        targetImage.classList.remove("fade-out");
+        targetImage.classList.add("fade-in");
+    }, COVER_TRANSITION_TIME);
+}
 
 function setupScreenChangesListeners() {
     let resizeTimeout;
@@ -632,9 +645,14 @@ function setupPaints() {
         const currentBucketColorLighter = rgbToString({r: rl, g: gl, b: bl});
         const currentBucketColorDarker = rgbToString({r: rd, g: gd, b: bd});
 
-        currentBucket.amount = 100;
-        currentBucket.bucketColor = currentBucketColor;
         currentBucket.activeEls = currentBucket.querySelectorAll(".active-el");
+        currentBucket.amount = 100;
+        const topOffset = calculateBucketPaintHeight(currentBucket.amount);
+        currentBucket.activeEls.forEach((el) => {
+            el.style.top = topOffset + "px";
+        });
+
+        currentBucket.bucketColor = currentBucketColor;
         currentBucket.classList.remove("hidden");
 
         currentBucket.querySelector(".paint-bucket-label").style.backgroundColor = currentBucketColor;
@@ -642,58 +660,57 @@ function setupPaints() {
         currentBucket.activeEls[1].style.background = `linear-gradient(90deg, ${currentBucketColorDarker} 0%, ${currentBucketColor} 22%, ${currentBucketColor} 78%, ${currentBucketColorDarker} 100%`;    
         
         currentBucket.addEventListener('click', () => {
-            // const colorSimilarity = getRgbSimilarity(item.currColor, currentBucketColor);
-            // if (colorSimilarity > COLOR_SIMILARITY_THRESHOLD || item.querySelector(".active-el").origColor == currentColor) {
+            
+            if (currentBucket.amount <= MINIMUM_BUCKET_PERCENT) {
+                return;
+                // TODO: Show message informing bucket is empty.
+            }
 
+            const colorSimilarity = getRgbSimilarity(item.currColor, currentBucketColor);
+            if (colorSimilarity < COLOR_SIMILARITY_THRESHOLD && item.querySelector(".active-el").origColor != currentColor) {
+                item.saturationLevel = 0;
+            }
                 // Get how much to take from the bucket (by a percentage of how much saturation is on the item).
                 const amountLoss = 1 - (item.saturationLevel / MAX_SATURATION);
-                currentBucket.amount -= amountLoss * AMOUNT_LOSS_MULTIPLIER;
-                // Set the height of the paint in the bucket - Give it the percentage of paint left (0 - 100);
-                const newTopOffset = Math.abs(((currentBucket.amount / 100) * (FULL_PAINT_OFFSET - EMPTY_PAINT_OFFSET)) - (FULL_PAINT_OFFSET - EMPTY_PAINT_OFFSET));
+                let saturationAvailable = MAX_SATURATION - item.saturationLevel;
 
+                // Get how much will be left over once paint is removed.
+                //         -0.5          1.5                    2
+                const finalAmount = currentBucket.amount - amountLoss * AMOUNT_LOSS_MULTIPLIER;
+                // If its less than 0, calculate how much paint will go on the item.
+                if (finalAmount < MINIMUM_BUCKET_PERCENT) {
+                    saturationAvailable = currentBucket.amount * MAX_SATURATION / AMOUNT_LOSS_MULTIPLIER;
+                    currentBucket.amount = MINIMUM_BUCKET_PERCENT;
+                } 
+                else {
+                    currentBucket.amount -= amountLoss * AMOUNT_LOSS_MULTIPLIER;
+                }
+                console.log("Bucket %: " + currentBucket.amount);
+
+                // Get the new height of the paint in the bucket - Give it the percentage of paint left (0 - 100);
+                const newTopOffset = calculateBucketPaintHeight(currentBucket.amount);
+
+                // Set the new height of the paint in the bucket.
                 currentBucket.activeEls.forEach((el) => {
                     el.style.top = newTopOffset + "px";
                 });
-                currentColor = currentBucketColor;
-                setColorOnItem(currentColor, saturation);
 
+                // Get the current colour and apply it to the variable and item.
+                currentColor = currentBucketColor;
+                setColorOnItem(currentColor, saturationAvailable);
+
+                // If waiting for an event, broadcast that this event has fired.
                 if (waitingForEvent || waitingForEventPre) {
                     eventString = "putPaintOnTool";
                 }
-            // }
+            
         }, { signal: bucketController.signal })
     }
+}
 
-
-
-
-
-
-    // if (redPaintPlaceholder) {
-    //     redPaintPlaceholder.addEventListener('click', () => {
-    //         // currentColor = "rgb(255,0,0)";
-    //         // setColorOnItem(currentColor);
-
-    //         const colorSimilarity = getRgbSimilarity(item.currColor, "rgb(255,0,0)");
-    //         if (colorSimilarity > COLOR_SIMILARITY_THRESHOLD || item.querySelector(".active-el").origColor == currentColor) {
-
-    //             const amountLoss = 1 - (item.saturationLevel / MAX_SATURATION);
-    //             redPaintPlaceholder.amount -= amountLoss * AMOUNT_LOSS_MULTIPLIER;
-    //             const newTopOffset = Math.abs(((redPaintPlaceholder.amount / 100) * (FULL_PAINT_OFFSET - EMPTY_PAINT_OFFSET)) - (FULL_PAINT_OFFSET - EMPTY_PAINT_OFFSET));
-
-    //             redPaintPlaceholder.activeEls.forEach((el) => {
-    //                 el.style.top = newTopOffset + "px";
-    //             });
-    //             currentColor =  "rgb(255,0,0)";
-    //             setColorOnItem(currentColor);
-
-    //             if (waitingForEvent || waitingForEventPre) {
-    //                 eventString = "putPaintOnTool";
-    //             }
-    //         }
-    //     });
-    // }
-    
+// Set the height of the paint in the bucket - Give it the percentage of paint left (0 - 100);
+function calculateBucketPaintHeight(amount) {
+    return Math.abs(((amount / 100) * (FULL_PAINT_OFFSET - EMPTY_PAINT_OFFSET)) - (FULL_PAINT_OFFSET - EMPTY_PAINT_OFFSET));
 }
 
 
@@ -742,7 +759,7 @@ function setupPaintItems() {
             else {
                 resetItem(item);
             }
-        }, {AbortController: itemsController});
+        }, {signal: itemsController.signal});
     }
 
     if (paintBrushPlaceholder) {
@@ -765,7 +782,7 @@ function setupPaintItems() {
             else {
                 resetItem(item);
             }
-        }, {AbortController: itemsController});
+        }, {signal: itemsController.signal});
     }
 
     if (paintBrushSmallPlaceholder) {
@@ -788,7 +805,7 @@ function setupPaintItems() {
             else {
                 resetItem(item);
             }
-        }, {AbortController: itemsController});
+        }, {signal: itemsController.signal});
     }
 }
 
@@ -812,10 +829,12 @@ function refreshPaintItems() {
 
 function setColorOnItem(color, saturation) {
     if (item != null) {
+        console.log("Pre Sat: " + item.saturationLevel);
         const itemActiveEl = item.querySelector('.active-el');
         itemActiveEl.style.backgroundColor = color;
-        item.saturationLevel = saturation;
+        item.saturationLevel += saturation;
         item.currColor = color;
+        console.log("Post Sat: " + item.saturationLevel + ", Sat Rec: " + saturation);
     }
 }
 
@@ -933,7 +952,7 @@ async function setupBubbles(mainFrame) {
     mainFrame.appendChild(fragment);
 
     isChangingLevel = false;
-    console.log("Is changing level " + isChangingLevel);
+    // console.log("Is changing level " + isChangingLevel);
     allBubbles = document.querySelectorAll(".bubble:not(.popped)");
 
     bubbleSpatialGrid.clear();

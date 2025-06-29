@@ -60,12 +60,13 @@ export const levelText = [
                         [
                             new Line({ text: "Welcome back!" }),
                             new Line({ text: "This one is a little trickier! You may have noticed the second colour there..." }),
-                            new Line({ text: "The client would like red and blue stripes on the wall, starting with red on the left-most panel. You should be able to see the lines separating the sections. Let us know when you're finished!", waitForInput: true, inputEvent: "wallMatchesTarget", tooltipText: [`The stripes are up!`, `Any other advice?`], charAnimAfter: "question" }),
+                            new Line({ text: "The client would like yellow and blue stripes on the wall, starting with red on the left-most panel. You should be able to see the lines separating the sections. Let us know when you're finished!", waitForInput: true, inputEvent: "wallMatchesTarget", tooltipText: [`"The stripes are up!"`, `"Any other advice?"`], charAnimAfter: "question" }),
                             new Line({ text: "Perfect! I think that's the finest stripes I've ever seen! (Press fast forward to go to the next level)" }),
-                            new Line({ text: "Nice try! But you might need some more paint, or maybe those lines aren't straight enough! Give it another go."})
+                            new Line({ text: "Nice try! But you might need some more paint, or maybe those lines aren't straight enough! Give it another go."}),
+                            new Line({ text: "See ya at the next jobsite!" })
                         ],
                         questionAtLine: [[2, 3, 1, 4], []],
-                        linesNext: [1, 2, 3, -1, 2]
+                        linesNext: [1, 2, 3, -1, 2, -1]
                 }
             ),
         functions: {
@@ -88,7 +89,7 @@ export const levelText = [
             }
         }
         ,
-        colors: ["rgb(237,28,36)", "rgb(0, 162, 232)"]
+        colors: ["rgb(242,242,48)", "rgb(0, 162, 232)"]
     },
     {
         textContent:
@@ -98,12 +99,13 @@ export const levelText = [
                         [
                             new Line({ text: "Well, we're really getting into it now..." }),
                             new Line({ text: "This client has heard all about your expert skills and wants something a little more peculiar." }),
-                            new Line({ text: "Let me know when you've finished with the squares please, good luck!", waitForInput: true, inputEvent: "wallMatchesTarget", tooltipText: [`Those bloody squares are done!`, `Come again boss?`], charAnimAfter: "question" }),
+                            new Line({ text: "Let me know when you've finished with the squares, and good luck!", waitForInput: true, inputEvent: "wallMatchesTarget", tooltipText: [`"Those bloody squares are done!"`, `"Come again boss?"`], charAnimAfter: "question" }),
                             new Line({ text: "You've done it again! Absolutely outstanding! We might have to start charging more! (Press fast forward to go to the next level)" }),
-                            new Line({ text: "So closeeee! Check those edges and maybe some more paint on the dark bits!"})
+                            new Line({ text: "So closeeee! Check those edges and maybe put more paint on spots that are darker!"}), 
+                            new Line({ text: "Catch ya tomorrow!" })
                         ],
                         questionAtLine: [[2, 3, 1, 4], []],
-                        linesNext: [1, 2, 3, -1, 2]
+                        linesNext: [1, 2, 3, -1, 2, -1]
                 }
             ),
         functions: {
@@ -113,7 +115,7 @@ export const levelText = [
                 const bubbleCount = allBubbles.length;
                 for (let i = 0; i < bubbleCount; i++) {
                     const targetRgbString = rgbToString({ r: levelTarget[i][0], g: levelTarget[i][1], b: levelTarget[i][2] });
-                    if (getRgbSimilarity(allBubbles[i].bubbleColor, targetRgbString) < 0.75) {
+                    if (getRgbSimilarity(allBubbles[i].bubbleColor, targetRgbString) < 0.85) {
                         maxMissedBubbles--;
                         // console.log(`Broke on ${b.x}, ${b.y}: Color ${b.bubbleColor}`);
                         if (maxMissedBubbles <= 0) {
@@ -137,12 +139,13 @@ export const levelText = [
                             new Line({ text: "Woah now doggy! You've come quite a ways now haven't ya!" }),
                             new Line({ text: "We got something a little trickier for you. This time, we can't touch the glass at all! " }),
                             new Line({ text: "If you do, the owner won't be happy and we'll be thrown out for sure! You might have to break out those smaller brushes this time." }),
-                            new Line({ text: "I've supplied some brown paint for the frame if you overlap that a little bit, but for heavens sake, do not hit the glass! Otherwise, its just a green two-tone piece, nothing complicated. Let me know when you're done!", waitForInput: true, inputEvent: "wallMatchesTarget", tooltipText: [`Phew, it's done!`, `Any other advice?`], charAnimAfter: "question" }),
+                            new Line({ text: "I've supplied some brown paint for the frame if you overlap that a little bit, but for heavens sake, do not hit the glass! Otherwise, its just a green two-tone piece, nothing complicated. Let me know when you're done!", waitForInput: true, inputEvent: "wallMatchesTarget", tooltipText: [`"Phew, it's done!"`, `"Any other advice?"`], charAnimAfter: "question" }),
                             new Line({ text: "Well shiver me timbers, you've absolutely nailed it again! And you didn't even touch the glass, now thats an expert. (Press fast forward to go to the next level)" }),
-                            new Line({ text: "Might need some touch ups on the frame, or maybe the green wall hasn't got enough coats, or the trim is off? What do you think?"})
+                            new Line({ text: "Might need some touch ups on the frame, or maybe the green wall hasn't got enough coats, or the trim is off? What do you think?"}),
+                            new Line({ text: "Cya at the next job!" })
                         ],
-                        questionAtLine: [[3, 4, 1, 4], []],
-                        linesNext: [1, 2, 3, 4, -1, 2]
+                        questionAtLine: [[3, 4, 1, 5], []],
+                        linesNext: [1, 2, 3, 4, -1, 3, -1]
                 }
             ),
         functions: {

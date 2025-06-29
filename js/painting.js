@@ -309,12 +309,14 @@ function changeLevel(count, absolute = false) {
     }
     window.localStorage.setItem("playerLevel", level);
     const levelLabel = document.getElementById("lblCurrentLevel");
-    levelLabel.textContent = `Level: ${level + 1}`;
+    levelLabel.textContent = `Level ${level + 1}`;
     
     const highestPlayerLevel = Number(window.localStorage.getItem("highestPlayerLevel"));
     if (highestPlayerLevel == null || level > highestPlayerLevel) {
         window.localStorage.setItem("highestPlayerLevel", level);
     }
+
+    isChangingLevel = true;
 
     // setupPaintItems();
     refreshPaintItems();
@@ -381,7 +383,11 @@ function updateText() {
     // If its the last word and last line, then all text has been displayed so end display.
     // Or if there is no more lines to display because of branching choices.
     if (lineIndex == -1 ||
-        (levelText[level].textContent.lines[lineIndex].isLastWord && levelText[level].textContent.isLastLine)) { 
+        (levelText[level].textContent.lines[lineIndex].isLastWord && levelText[level].textContent.isLastLine )) {
+            // if (levelText[level].textContent.nextLineTarget != -1) {
+            //     levelText[level].textContent.getNextLine();
+            //     return;
+            // } 
         hasTextToDisplay = false;
         // setCharacterImage(levelText[level].textContent.currentLine.char, levelText[level].textContent.currentLine.charAnimAfter);
         return;
@@ -825,11 +831,15 @@ function refreshPaintItems() {
                 
     currentColor = ITEM_ORIGINAL_COLOR;
 
-    allItems.forEach((item) => {
-        const itemActiveEl = item.querySelector('.active-el');   
-        itemActiveEl.style.backgroundColor = ITEM_ORIGINAL_COLOR;
-        item.currColor = ITEM_ORIGINAL_COLOR;
+    if (item) {
         item.saturationLevel = 0;
+    }
+
+    allItems.forEach((i) => {
+        const itemActiveEl = i.querySelector('.active-el');   
+        itemActiveEl.style.backgroundColor = ITEM_ORIGINAL_COLOR;
+        i.currColor = ITEM_ORIGINAL_COLOR;
+        i.saturationLevel = 0;
     });
      
     
@@ -1108,13 +1118,19 @@ async function checkPaint() {
     if (allBubbles == null || allBubbles.length <= 0) { return; }
     const recentBubbles = Array.from(allBubbles).filter(b => b.dataset.recent !== "0");
     recentBubbles.forEach((bubble) => {
-        let currDryness = Number(bubble.dataset.recent);
-        bubble.dataset.recent = --currDryness;
-        if (currDryness < 0) {
+        let currWetness = Number(bubble.dataset.recent);
+        bubble.dataset.recent = --currWetness;
+        if (currWetness < 0) {
             bubble.dataset.recent = 0;
         }
-        if (currDryness < 6 && currDryness > 0) {
-            const newColor = mixRgb(bubble.bubbleColor, 'rgb(0,0,0)', DRYNESS_COLOR_MODIFIER); 
+        if (currWetness < 6 && currWetness > 0) {
+            // const newColor = mixRgb(bubble.bubbleColor, 'rgb(0,0,0)', DRYNESS_COLOR_MODIFIER); 
+            let {r, g, b} = stringToRgb(bubble.bubbleColor);
+            const clamp = v => Math.max(0, v - 1);
+            r = clamp(r);
+            g = clamp(g);
+            b = clamp(b);
+            const newColor = rgbToString({ r: r, g: g, b: b });
             bubble.bubbleColor = newColor;
             // currColor = window.getComputedStyle(bubble).backgroundColor;
             bubble.style.backgroundColor = newColor;
@@ -1265,7 +1281,7 @@ function handleMainFrameMouseUp(e) {
 
 function handleMainFrameMouseMove(e) {
     // Debug stuff.
-    if (e.target.classList.contains("bubble"))
+    if (debugActive && e.target.classList.contains("bubble"))
     {
         debugCurrX.textContent = e.target.x;
         debugCurrY.textContent = e.target.y;
@@ -1339,6 +1355,7 @@ function toggleLevelSelectMenu(setting) {
     const levelSelectMenu = document.getElementById("levelSelectMenu");
     const levelSelectMenuPanel = levelSelectMenu.querySelector(".level-select-panel");
     if (setting) {
+        isChangingLevel = true;
         const highestPlayerLevel = Number(window.localStorage.getItem("highestPlayerLevel"));
         const allLevelsCount = levelText.length;
 
@@ -1373,6 +1390,7 @@ function toggleLevelSelectMenu(setting) {
         levelSelectMenu.style.visibility = "visible";
     }
     else {
+        isChangingLevel = false;
         levelSelectMenu.style.visibility = "";
         document.getElementById("btnLevelSelect").isOn = false;
     }
@@ -1396,7 +1414,7 @@ function getRandomNumber(min, max) {
 }
 
 function checkCollisions() {
-        if (!mouseIsDown || item == null) {
+        if (!mouseIsDown || item == null || isChangingLevel) {
         return;
     }
 
@@ -1418,6 +1436,10 @@ function checkCollisions() {
 
     for (let dx = -1; dx <= 1; dx++) {
         for (let dy = -1; dy <= 1; dy++) {
+
+            // const xMap = bubbleSpatialGrid.get(mouseGridPosX + dx);
+            // const group = xMap?.get(mouseGridPosY + dy);
+
             const key = `${mouseGridPosX + dx},${mouseGridPosY + dy}`;
             const group = bubbleSpatialGrid.get(key);
             if (group) {

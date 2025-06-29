@@ -21,6 +21,7 @@
     border: solid 0px red;
     z-index: 20;
     pointer-events: none;
+    user-select: none;
     
     /* transform: translateX(-50%) translateY(-50%); */
 }

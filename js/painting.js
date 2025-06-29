@@ -95,6 +95,10 @@ window.addEventListener("load", (e) => {
 
     // if ()
 
+    // level = window.localStorage.getItem("highestPlayerLevel");
+    // console.log(level);
+
+
     if (mainFrame){
         setupMainFrame(mainFrame);
     }
@@ -306,9 +310,6 @@ function changeLevel(count, absolute = false) {
     if (highestPlayerLevel == null || level > highestPlayerLevel) {
         window.localStorage.setItem("highestPlayerLevel", level);
     }
-
-    const targetImageSource = `/images/level-images/target-${level + 1}.png`;
-    document.getElementById("targetImage").setAttribute("src", targetImageSource);
 
     // setupPaintItems();
     refreshPaintItems();
@@ -616,6 +617,10 @@ function getLevelInformation() {
 function setupPaints() {
     const paintSideBar = document.getElementById("paintSideBar");
     const paintPlaceHolders = paintSideBar.querySelectorAll(".paint-bucket");
+
+    paintPlaceHolders.forEach((paint) => {
+        paint.classList.add("hidden");
+    })
 
 
     // const redPaintPlaceholder = document.getElementById("paintBucketOnePlaceholder");

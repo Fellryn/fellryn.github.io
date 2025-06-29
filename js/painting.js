@@ -21,7 +21,7 @@ const AMOUNT_LOSS_MULTIPLIER = 5;
 
 let lastDrynessCheck = 0;
 const DRYNESS_CHECK_INTERVAL = 500;
-const DRYNESS_COLOR_MODIFIER = 0.02;
+const DRYNESS_COLOR_MODIFIER = 0.015;
 const WETNESS_THRESHOLD_MIX_COLOR = 3;
 
 let lastBubbleCheck = 0;
@@ -86,6 +86,8 @@ let levelBackground = [];
 let levelGuideLines = [];
 let levelTarget = [];
 let isExampleShown = false;
+
+// level = window.localStorage.getItem("highestPlayerLevel");
 
 
 window.addEventListener("load", (e) => {
@@ -834,12 +836,12 @@ function refreshPaintItems() {
 
 function setColorOnItem(color, saturation) {
     if (item != null) {
-        console.log("Pre Sat: " + item.saturationLevel);
+        // console.log("Pre Sat: " + item.saturationLevel);
         const itemActiveEl = item.querySelector('.active-el');
         itemActiveEl.style.backgroundColor = color;
         item.saturationLevel += saturation;
         item.currColor = color;
-        console.log("Post Sat: " + item.saturationLevel + ", Sat Rec: " + saturation);
+        // console.log("Post Sat: " + item.saturationLevel + ", Sat Rec: " + saturation);
     }
 }
 
@@ -992,6 +994,7 @@ async function setupBubbles(mainFrame) {
 }
 
 function setupFunctions() {
+    eventString = "";
     levelFunctions = [];
     if (levelText.length - 1 >= level) {
         if (levelText[level].functions) {

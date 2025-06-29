@@ -21,7 +21,7 @@ export const levelText = [
                 /* 9 */ new Line({ text: "Now, put it on the canvas and press it down to paint!", delayAfterWhole: 3, waitForInput: true, inputEvent: "putPaintOnCanvas" }),
                 /* 10 */ new Line({ text: "Excellent! Now you're all set!" }),
                 /* 11 */ new Line({ text: "If you just paint this whole wall red you'll be all done, let me know when you're finished!", waitForInput: true, inputEvent: "wallPaintedRed", tooltipText: [`"All done chief!`, "How do I paint again?"] }),
-                /* 12 */ new Line({ text: "That's a shame! Well, goodluck and have a nice day! I was after red paint on the entire wall if you're interested...", waitForInput: true, inputEvent: "wallPaintedRed", tooltipText: [`"Fine, here's your red wall!`, `"Na mate, I'm out!"`], charAnimAfter: "question" }),
+                /* 12 */ new Line({ text: "That's a shame! Well, goodluck and have a nice day! I was after red paint on the entire wall if you're interested...", waitForInput: true, inputEvent: "wallPaintedRed", tooltipText: [`"Fine, here's your red wall!`, `"Na mate, I'm out!"`], charAnim: "shame", charAnimAfter: "question" }),
                 /* 13 */ new Line({ text: "Yep, that's it, nicely done! Now, onto something a bit harder if you're interested! (Press fast forward to go to the next level)" }),
                 /* 14 */ new Line({ text: "Woah now, you need more paint than that! Make sure most of the wall is a solid red color, you may need two coats.", charAnimAfter: "exclaim" }),
                 /* 15 */ new Line({ text: "Well, feel free to paint the wall anyway if you want! (Press fast forward to go to the next level)" })
@@ -39,7 +39,7 @@ export const levelText = [
                 for (let b of allBubbles) {
                     if (getRgbSimilarity(b.bubbleColor, "rgb(255,0,0)") < 0.50) {
                         maxMissedBubbles--;
-                        console.log(`Broke on ${b.x}, ${b.y}: Color ${b.bubbleColor}`);
+                        // console.log(`Broke on ${b.x}, ${b.y}: Color ${b.bubbleColor}`);
                         if (maxMissedBubbles <= 0) {
                             isAllColor = false;
                             break;

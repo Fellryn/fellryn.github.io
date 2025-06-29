@@ -57,6 +57,13 @@ export class TextLines {
         }
     }
 
+    reset() {
+        this.lineIndex = 0;
+        this.lines.forEach((line) => {
+            line.wordIndex = 0;
+        })
+    }
+
     get nextLineTarget() {
         return this.linesNext[this.currentLineIndex];
     }

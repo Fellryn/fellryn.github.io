@@ -61,9 +61,16 @@ body {
     border-radius: 0.5rem;
     height: fit-content;
     display: flex;
+    justify-content: space-between;
     padding: 0.2rem;
     gap: 0.5rem;
     box-shadow: 0px -1px 2px 3px #00000050;
+}
+
+.ingame-menu p {
+    margin: inherit;
+    align-self: center;
+    padding-right: 2px;
 }
 
 .ingame-menu.tools-side-bar {
@@ -109,6 +116,13 @@ body {
     user-select: none;
     transition: transform 200ms;
     background-color: aqua;
+}
+
+.button.main.disabled {
+    pointer-events: none;
+    background-color: lightgray;
+    color: darkgray;
+    border: solid 2px darkgray;
 }
 
 .button.main:hover {
@@ -287,4 +301,40 @@ body {
 
 .debug-panel .value-span {
     margin-left: auto;
+}
+
+.level-select-panel-container {
+    position: absolute;
+    left: 50%;
+    top: 30%;
+    /* pointer-events: none; */
+    visibility: hidden;
+    transform: translateX(-50%) translateY(-50%);
+    background-color: whitesmoke;
+}
+
+.level-select-panel {
+    border: 2px black solid;
+    border-radius: 0.5rem;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    max-width: 255px;
+    padding: 0.2rem;
+    gap: 0.5rem;   
+    width: fit-content;
+}
+
+.level-select-panel p {
+    text-align: center;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    width: 100%;
+    flex-basis: 100%;
+}
+
+.level-select-panel .close-button {
+    margin-top: 0.5rem;
+    width: 100%;
+    flex-basis: 100%;
 }

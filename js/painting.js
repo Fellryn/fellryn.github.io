@@ -40,8 +40,10 @@ let itemActiveEl = null;
 let itemCollisionBox = null;
 let itemMoveSpeed = 500;
 let itemRect = null;
+const ITEM_ORIGINAL_COLOR = "rgb(240, 237, 237)";
 const MAX_SATURATION = 20000;
 let saturationLevelPerTick = 1;
+let itemsController = new AbortController();
 let bucketController = new AbortController();
 
 let lastMouseX = 0;
@@ -75,6 +77,7 @@ let levelFunctions = [];
 let lastFunctionCheck = 0;
 const FUNCTION_CHECK_INTERVAL = 1000;
 let latestImageRequest = 0;
+let talkAreaController = new AbortController();
 
 const worker = new Worker("js/worker.js");
 
@@ -112,15 +115,15 @@ window.addEventListener("load", (e) => {
         setupDebugButton(btnDebugMenu);
     }
 
-    const btnRed = document.getElementById("btnColorRed");
-    if (btnRed) {
-        setupRedButton(btnRed);
-    }
+    // const btnRed = document.getElementById("btnColorRed");
+    // if (btnRed) {
+    //     setupRedButton(btnRed);
+    // }
 
-    const btnBlue = document.getElementById("btnColorBlue");
-    if (btnBlue) {
-        setupBlueButton(btnBlue);
-    }
+    // const btnBlue = document.getElementById("btnColorBlue");
+    // if (btnBlue) {
+    //     setupBlueButton(btnBlue);
+    // }
 
     const btnPainterView = document.getElementById("btnPainterView");
     if (btnPainterView) {
@@ -135,6 +138,11 @@ window.addEventListener("load", (e) => {
     const btnCheat = document.getElementById("btnCheat");
     if (btnCheat) {
         setupCheatButton(btnCheat);
+    }
+
+    const btnLevelSelect = document.getElementById("btnLevelSelect");
+    if (btnLevelSelect) {
+        setupLevelSelectButton(btnLevelSelect);
     }
 
     setupScreenChangesListeners();
@@ -160,11 +168,26 @@ window.addEventListener("load", (e) => {
 // }
 
 function setupTalkArea() {
+
+    talkAreaController.abort();
+    talkAreaController = new AbortController();
+
     talkTextArea = document.getElementById("talkText");
     const talkSkipButton = document.getElementById("btnTalkSkip");
     const yesButton = document.getElementById("btnTalkYes");
     const noButton = document.getElementById("btnTalkNo");
     talkTextArea.textContent = "";
+
+    waitingForEvent = false;
+    waitingForEventPre = false;
+    eventString = "";
+
+    yesButton.classList.remove("fade-in");
+    yesButton.classList.remove("fade-out");
+    noButton.classList.remove("fade-in");
+    noButton.classList.remove("fade-out");
+
+    levelText[level].textContent.reset();
 
     if (yesButton) {
         yesButton.addEventListener('click', () => {
@@ -190,7 +213,7 @@ function setupTalkArea() {
             yesButton.classList.add("fade-out");
             noButton.classList.remove("fade-in");
             noButton.classList.add("fade-out");
-        });
+        }, {AbortController: talkAreaController});
     }
 
     if (noButton) {
@@ -206,7 +229,7 @@ function setupTalkArea() {
             noButton.classList.add("fade-out");
             yesButton.classList.remove("fade-in");
             yesButton.classList.add("fade-out");
-        });
+        }, {AbortController: talkAreaController});
     }
     
     if (levelText.length - 1 >= level) {
@@ -222,7 +245,8 @@ function setupTalkArea() {
         talkSkipButton.addEventListener('click', () => {
             if (blockSkipButton) { return; }
             if (waitingForEvent && !hasTextToDisplay) { return; }
-            if (levelText[level].textContent.lineIndex == -1 || levelText[level].textContent.nextLineTarget == -1) {
+            if ((levelText[level].textContent.lineIndex == -1 || 
+                (levelText[level].textContent.nextLineTarget == -1) && levelText[level].textContent.currentLine.isLastWord)) {
                 changeLevel(1);
                 return;
             }
@@ -258,7 +282,7 @@ function setupTalkArea() {
                 //     return;
                 // };
             }
-        });
+        }, {AbortController: talkAreaController});
     }
 }
 
@@ -266,14 +290,27 @@ function showTextArea() {
 
 }
 
-function changeLevel(count) {
-    level += count;
+function changeLevel(count, absolute = false) {
+    if (absolute) {
+        level = count;
+    } 
+    else {
+        level += count;
+    }
     window.localStorage.setItem("playerLevel", level);
+    const levelLabel = document.getElementById("lblCurrentLevel");
+    levelLabel.textContent = `Level: ${level + 1}`;
     
     const highestPlayerLevel = Number(window.localStorage.getItem("playerLevel"));
     if (highestPlayerLevel == null || level > highestPlayerLevel) {
         window.localStorage.setItem("highestPlayerLevel", highestPlayerLevel);
     }
+
+
+    // setupPaintItems();
+    refreshPaintItems();
+
+
 
     setupBubbles(mainFrameRef);
     setupPaints();
@@ -339,7 +376,7 @@ function updateText() {
     if (lineIndex == -1 ||
         (levelText[level].textContent.lines[lineIndex].isLastWord && levelText[level].textContent.isLastLine)) { 
         hasTextToDisplay = false;
-        setCharacterImage(levelText[level].textContent.currentLine.char, levelText[level].textContent.currentLine.charAnimAfter);
+        // setCharacterImage(levelText[level].textContent.currentLine.char, levelText[level].textContent.currentLine.charAnimAfter);
         return;
     } 
     // If its the last word, but not the last line, get the delay and the next word.
@@ -605,23 +642,25 @@ function setupPaints() {
         currentBucket.activeEls[1].style.background = `linear-gradient(90deg, ${currentBucketColorDarker} 0%, ${currentBucketColor} 22%, ${currentBucketColor} 78%, ${currentBucketColorDarker} 100%`;    
         
         currentBucket.addEventListener('click', () => {
-            const colorSimilarity = getRgbSimilarity(item.currColor, currentBucketColor);
-            if (colorSimilarity > COLOR_SIMILARITY_THRESHOLD || item.querySelector(".active-el").origColor == currentColor) {
+            // const colorSimilarity = getRgbSimilarity(item.currColor, currentBucketColor);
+            // if (colorSimilarity > COLOR_SIMILARITY_THRESHOLD || item.querySelector(".active-el").origColor == currentColor) {
 
+                // Get how much to take from the bucket (by a percentage of how much saturation is on the item).
                 const amountLoss = 1 - (item.saturationLevel / MAX_SATURATION);
                 currentBucket.amount -= amountLoss * AMOUNT_LOSS_MULTIPLIER;
+                // Set the height of the paint in the bucket - Give it the percentage of paint left (0 - 100);
                 const newTopOffset = Math.abs(((currentBucket.amount / 100) * (FULL_PAINT_OFFSET - EMPTY_PAINT_OFFSET)) - (FULL_PAINT_OFFSET - EMPTY_PAINT_OFFSET));
 
                 currentBucket.activeEls.forEach((el) => {
                     el.style.top = newTopOffset + "px";
                 });
                 currentColor = currentBucketColor;
-                setColorOnItem(currentColor);
+                setColorOnItem(currentColor, saturation);
 
                 if (waitingForEvent || waitingForEventPre) {
                     eventString = "putPaintOnTool";
                 }
-            }
+            // }
         }, { signal: bucketController.signal })
     }
 
@@ -657,11 +696,12 @@ function setupPaints() {
     
 }
 
-function putColorOnItem() {
 
-}
 
 function setupPaintItems() {
+    itemsController.abort();
+    itemsController = new AbortController();
+
     const paintRollerPlaceholder = document.getElementById("rollingPinPlaceholder");
     const paintBrushPlaceholder = document.getElementById("paintBrushPlaceholder");
     const paintBrushSmallPlaceholder = document.getElementById("paintBrushSmallPlaceholder")
@@ -672,9 +712,9 @@ function setupPaintItems() {
     paintBrushSmallPlaceholder.firstElementChild.rotates = false;
 
     allItems.forEach((i) => {
-        const originalColor = window.getComputedStyle(i.querySelector('.active-el')).backgroundColor;
-        i.querySelector('.active-el').origColor = originalColor;
-        i.firstElementChild.currColor = originalColor;
+        // const originalColor = window.getComputedStyle(i.querySelector('.active-el')).backgroundColor;
+        i.querySelector('.active-el').origColor = ITEM_ORIGINAL_COLOR;
+        i.firstElementChild.currColor = ITEM_ORIGINAL_COLOR;
         i.firstElementChild.saturationLevel = 0;
     });
     
@@ -702,7 +742,7 @@ function setupPaintItems() {
             else {
                 resetItem(item);
             }
-        });
+        }, {AbortController: itemsController});
     }
 
     if (paintBrushPlaceholder) {
@@ -725,7 +765,7 @@ function setupPaintItems() {
             else {
                 resetItem(item);
             }
-        });
+        }, {AbortController: itemsController});
     }
 
     if (paintBrushSmallPlaceholder) {
@@ -748,7 +788,34 @@ function setupPaintItems() {
             else {
                 resetItem(item);
             }
-        });
+        }, {AbortController: itemsController});
+    }
+}
+
+function refreshPaintItems() {
+    const paintRollerPlaceholder = document.getElementById("rollingPinPlaceholder");
+    const paintBrushPlaceholder = document.getElementById("paintBrushPlaceholder");
+    const paintBrushSmallPlaceholder = document.getElementById("paintBrushSmallPlaceholder")
+    const allItems = [paintRollerPlaceholder, paintBrushPlaceholder, paintBrushSmallPlaceholder];
+                
+    currentColor = ITEM_ORIGINAL_COLOR;
+
+    allItems.forEach((item) => {
+        const itemActiveEl = item.querySelector('.active-el');   
+        itemActiveEl.style.backgroundColor = ITEM_ORIGINAL_COLOR;
+        item.currColor = ITEM_ORIGINAL_COLOR;
+        item.saturationLevel = 0;
+    });
+     
+    
+}
+
+function setColorOnItem(color, saturation) {
+    if (item != null) {
+        const itemActiveEl = item.querySelector('.active-el');
+        itemActiveEl.style.backgroundColor = color;
+        item.saturationLevel = saturation;
+        item.currColor = color;
     }
 }
 
@@ -866,6 +933,7 @@ async function setupBubbles(mainFrame) {
     mainFrame.appendChild(fragment);
 
     isChangingLevel = false;
+    console.log("Is changing level " + isChangingLevel);
     allBubbles = document.querySelectorAll(".bubble:not(.popped)");
 
     bubbleSpatialGrid.clear();
@@ -899,6 +967,7 @@ async function setupBubbles(mainFrame) {
 }
 
 function setupFunctions() {
+    levelFunctions = [];
     if (levelText.length - 1 >= level) {
         if (levelText[level].functions) {
             levelFunctions = Object.keys(levelText[level].functions);
@@ -906,23 +975,23 @@ function setupFunctions() {
     }
 }
 
-function checkBubbles() {
-    if (!isChangingLevel) {
-        const anyBubble = mainFrame.querySelector(".bubble:not(.popped)");
+// function checkBubbles() {
+//     if (!isChangingLevel) {
+//         const anyBubble = mainFrame.querySelector(".bubble:not(.popped)");
 
-        if (!anyBubble)
-        {
-            console.log('level finished');
-            isChangingLevel = true;
-            console.log("is changing level true")
-            level++;
-            setupBubbles(mainFrame);
-            checkLevelRules(mainFrame);
-        }        
-    }
+//         if (!anyBubble)
+//         {
+//             console.log('level finished');
+//             isChangingLevel = true;
+//             console.log("is changing level true")
+//             level++;
+//             setupBubbles(mainFrame);
+//             checkLevelRules(mainFrame);
+//         }        
+//     }
     
-    // requestAnimationFrame(checkBubbles);
-}
+//     // requestAnimationFrame(checkBubbles);
+// }
 
 function tick(timestamp) {
     if (timestamp - lastDrawCheck >= DRAW_CHECK_INTERVAL) {
@@ -936,11 +1005,11 @@ function tick(timestamp) {
         lastDrynessCheck = timestamp;
     }
 
-    if (timestamp - lastBubbleCheck >= BUBBLE_CHECK_INTERVAL) {
-        // console.log("fired bubble check");
-        checkBubbles();
-        lastBubbleCheck = timestamp;
-    }
+    // if (timestamp - lastBubbleCheck >= BUBBLE_CHECK_INTERVAL) {
+    //     // console.log("fired bubble check");
+    //     checkBubbles();
+    //     lastBubbleCheck = timestamp;
+    // }
 
     if (bubbleRectNeedsUpdate) {
         if (allBubbles != null && allBubbles.length > 0) {
@@ -1027,15 +1096,15 @@ async function checkPaint() {
     // requestAnimationFrame(() => checkPaint(mainFrame));
 }
 
-function checkLevelRules(mainFrame) {
-    // switch (level) {
-        // case default:
-            const randomAngle = getRandomNumber(-60, 60);
+// function checkLevelRules(mainFrame) {
+//     // switch (level) {
+//         // case default:
+//             const randomAngle = getRandomNumber(-60, 60);
 
-            // mainFrame.style.transform = `perspective(1000px) rotateY(${randomAngle}deg) rotateX(${randomAngle / 2}deg) rotateZ(${randomAngle / 4}deg) translateX(50%) translateY(50%)`;
-            // break;
-    // }
-}
+//             // mainFrame.style.transform = `perspective(1000px) rotateY(${randomAngle}deg) rotateX(${randomAngle / 2}deg) rotateZ(${randomAngle / 4}deg) translateX(50%) translateY(50%)`;
+//             // break;
+//     // }
+// }
 
 // function setupPopAllBubblesButton(button) {
 //     button.addEventListener('click', () => {
@@ -1074,19 +1143,19 @@ function setupDebugButton(button) {
 
 }
 
-function setupRedButton(button) {
-    button.addEventListener('click', () => {
-        currentColor = "rgb(255,0,0)";
-        setColorOnItem(currentColor);
-    });
-}
+// function setupRedButton(button) {
+//     button.addEventListener('click', () => {
+//         currentColor = "rgb(255,0,0)";
+//         setColorOnItem(currentColor);
+//     });
+// }
 
-function setupBlueButton(button) {
-    button.addEventListener('click', () => {
-        currentColor = "rgb(0,0,255)";
-        setColorOnItem(currentColor);        
-    });
-}
+// function setupBlueButton(button) {
+//     button.addEventListener('click', () => {
+//         currentColor = "rgb(0,0,255)";
+//         setColorOnItem(currentColor);        
+//     });
+// }
 
 function setupPainterViewButton(button) {
     button.isOn = false;
@@ -1150,14 +1219,7 @@ function toggleExampleOverlay(setting) {
 }
 
 
-function setColorOnItem(color) {
-    if (item != null) {
-        const itemActiveEl = item.querySelector('.active-el');
-        itemActiveEl.style.backgroundColor = color;
-        item.saturationLevel = MAX_SATURATION;
-        item.currColor = color;
-    }
-}
+
 
 function handleMainFrameClick(e) {
     // const target = e.target;
@@ -1222,6 +1284,72 @@ function handleMainFrameMouseMove(e) {
     // if (target) {
     //     popBubble(target);
     // }
+}
+
+function setupLevelSelectButton(button) {
+    button.isOn = false;
+
+    button.addEventListener('click', () => {
+        button.isOn = !button.isOn;
+        toggleLevelSelectMenu(button.isOn);
+    });
+
+    const levelSelectMenu = document.getElementById("levelSelectMenu");
+    levelSelectMenu.addEventListener('click', (e) => {
+        const target = e.target.closest(".button");
+
+        if (target && target.classList.contains("level-button")) {
+            changeLevel(target.levelTarget, true);
+            toggleLevelSelectMenu(false);
+        }
+
+        if (target && target.classList.contains("close-button")) {
+            toggleLevelSelectMenu(false);
+        }
+    });
+}
+
+function toggleLevelSelectMenu(setting) {
+    const levelSelectMenu = document.getElementById("levelSelectMenu");
+    const levelSelectMenuPanel = levelSelectMenu.querySelector(".level-select-panel");
+    if (setting) {
+        const highestPlayerLevel = Number(window.localStorage.getItem("highestPlayerLevel"));
+        const allLevelsCount = levelText.length;
+
+        const fragment = document.createDocumentFragment();
+        const titleElement = document.createElement("p");
+        titleElement.textContent = "Select Level";
+        fragment.appendChild(titleElement);
+
+        levelSelectMenuPanel.textContent = "";
+
+        // const levelSelectAbortController = new AbortController();
+
+        for (let i = 0; i < allLevelsCount; i++) {
+            const levelButton = document.createElement("div");
+            levelButton.classList.add("button", "main", "level-button");
+            levelButton.textContent = i + 1;
+            levelButton.levelTarget = i;
+            if (i > highestPlayerLevel) {
+                levelButton.classList.add("disabled");
+            }
+
+            fragment.appendChild(levelButton);
+        }
+
+        const closeButton = document.createElement("div");
+        closeButton.classList.add("button", "main", "close-button");
+        closeButton.textContent = "Close";
+        fragment.appendChild(closeButton);
+        
+
+        levelSelectMenuPanel.appendChild(fragment);
+        levelSelectMenu.style.visibility = "visible";
+    }
+    else {
+        levelSelectMenu.style.visibility = "";
+        document.getElementById("btnLevelSelect").isOn = false;
+    }
 }
 
 function popBubble(bubble) {

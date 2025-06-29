@@ -1,3 +1,10 @@
+export const shadowSettings = Object.freeze({
+    "E": "1px 0px 0px",
+    "W": "-1px 0px 0px",
+    "S": "0px 1px 0px",
+    "SW": "1px 1px 0px"
+});
+
 export function getRgbSimilarity(c1, c2) {
 
     const { r:r1, g: g1, b: b1} = stringToRgb(c1);
@@ -28,3 +35,4 @@ export async function fileExists(url) {
         return false;
     }
 }
+

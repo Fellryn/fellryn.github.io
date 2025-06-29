@@ -1,5 +1,5 @@
 import { levelText } from "./level-text/levelText.js";
-import { getRgbSimilarity, rgbToString, stringToRgb, fileExists } from "./helpers.js";
+import { getRgbSimilarity, rgbToString, stringToRgb, fileExists, shadowSettings } from "./helpers.js";
 
 let mouseIsDown = false;
 let bubbleFidelity = 30;
@@ -922,13 +922,14 @@ async function setupBubbles(mainFrame) {
         newBubble.bubbleColor = `rgb(${r},${g},${b})`;
         // newBubble.bubbleColor = DEFAULT_BUBBLE_COLOR;
         newBubble.style.backgroundColor = newBubble.bubbleColor;
+        newBubble.style.zIndex = "";
 
         if (levelGuideLines.length > 0) {
             for (let info of levelGuideLines) {
                 if (info.pixel === i) {
                     // console.log("shadow set on cell " + i);
-                    newBubble.style.boxShadow = "1px 0px 0px #00000020";
-                    newBubble.style.zIndex = "20";
+                    newBubble.style.boxShadow = `${shadowSettings[info.shadow]} #00000020`;
+                    newBubble.style.zIndex = `${info.zIndex}`;
                     continue;
                 }
             }

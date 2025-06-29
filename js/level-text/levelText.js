@@ -65,7 +65,7 @@ export const levelText = [
                             new Line({ text: "Nice try! But you might need some more paint, or maybe those lines aren't straight enough! Give it another go."})
                         ],
                         questionAtLine: [[2, 3, 1, 4], []],
-                        linesNext: [1, 2, 3, -1, -1]
+                        linesNext: [1, 2, 3, -1, 2]
                 }
             ),
         functions: {
@@ -89,7 +89,46 @@ export const levelText = [
         }
         ,
         colors: ["rgb(237,28,36)", "rgb(0, 162, 232)"]
+    },
+    {
+        textContent:
+            new TextLines(
+                {
+                    lines:
+                        [
+                            new Line({ text: "Well, we're really getting into it now..." }),
+                            new Line({ text: "This client has heard all about your expert skills and wants something a little more peculiar." }),
+                            new Line({ text: "Let me know when you've finished with the squares please, good luck!", waitForInput: true, inputEvent: "wallMatchesTarget", tooltipText: [`The stripes are up!`, `Any other advice?`], charAnimAfter: "question" }),
+                            new Line({ text: "You've done it again! Absolutely outstanding! We might have to start charging more! (Press fast forward to go to the next level)" }),
+                            new Line({ text: "So closeeee! Check those edges and maybe some more paint on the dark bits!"})
+                        ],
+                        questionAtLine: [[2, 3, 1, 4], []],
+                        linesNext: [1, 2, 3, -1, 2]
+                }
+            ),
+        functions: {
+            wallMatchesTarget({ allBubbles, levelTarget }) {
+                let isAllColor = true;
+                let maxMissedBubbles = 15;
+                const bubbleCount = allBubbles.length;
+                for (let i = 0; i < bubbleCount; i++) {
+                    const targetRgbString = rgbToString({ r: levelTarget[i][0], g: levelTarget[i][1], b: levelTarget[i][2] });
+                    if (getRgbSimilarity(allBubbles[i].bubbleColor, targetRgbString) < 0.75) {
+                        maxMissedBubbles--;
+                        // console.log(`Broke on ${b.x}, ${b.y}: Color ${b.bubbleColor}`);
+                        if (maxMissedBubbles <= 0) {
+                            isAllColor = false;
+                            break;
+                        }
+                    }
+                }
+                return isAllColor;
+            }
+        }
+        ,
+        colors: ["rgb(240, 174, 201)", "rgb(247, 247, 247)"]
     }
+
 
 ]
 

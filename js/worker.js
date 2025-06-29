@@ -1,7 +1,9 @@
 const SHADOW_RIGHT = [196, 60, 63];
 const SHADOW_VALUES = [
-    { r: 193, g: 62, b: 170, shadow: "SR" },
-    { r: 192, g: 196, b: 60, shadow: "SL" },
+    { r: 193, g: 62, b: 170, shadow: "E", zIndex: 20 },
+    { r: 192, g: 196, b: 60, shadow: "W", zIndex: 20},
+    { r: 154, g: 95, b: 158, shadow: "SW", zIndex: 30 },
+    { r: 108, g: 145, b: 143, shadow: "S", zIndex: 20 }
 ];
 
 
@@ -34,7 +36,8 @@ onmessage = (e) => {
                     const pixelIndex = i / 4;
                     shadowInformation.push({
                         pixel: pixelIndex,
-                        shadow: match.shadow
+                        shadow: match.shadow,
+                        zIndex: match.zIndex
                     });
                     break;
                 }

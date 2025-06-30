@@ -330,7 +330,7 @@ body {
 
 .debug-panel .name-span {
     display: flex;
-    width: 150px;
+    width: 200px;
     justify-content: space-between;
 }
 

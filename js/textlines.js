@@ -16,10 +16,10 @@ export class TextLines {
     // 5: line to go to if no.
     // 6: line to go to if "yes" condition is not met. 
     questionAtLine = [];
-    // Denotes 
+    loseLineIndex = -1;
 
 
-    constructor({ startIndex = 0, lines = [], autoNextLine = true, questionAtLine = null, linesNext = -1 } = {}) {
+    constructor({ startIndex = 0, lines = [], autoNextLine = true, questionAtLine = null, linesNext = -1, loseLineIndex = -1 } = {}) {
         this.currentLineIndex = startIndex;
         this.lines = lines;
         this.autoNextLine = autoNextLine;
@@ -35,6 +35,7 @@ export class TextLines {
             this.linesNext = linesNext;
         }
         this.questionAtLine = questionAtLine;
+        this.loseLineIndex = loseLineIndex;
 
     }
     
@@ -80,6 +81,13 @@ export class TextLines {
         return this.currentLine.wordIndex;
     }
     
+    get loseLineIndex() {
+        return this.loseLineIndex;
+    }
+
+    goToLoseLineIndex() {
+        this.lineIndex = this.loseLineIndex;
+    }
 
     get isLastLine() {
         return this.currentLineIndex == this.lines.length - 1;

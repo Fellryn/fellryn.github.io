@@ -142,10 +142,12 @@ export const levelText = [
                             new Line({ text: "I've supplied some brown paint for the frame if you overlap that a little bit, but for heavens sake, do not hit the glass! Otherwise, its just a green two-tone piece, nothing complicated. Let me know when you're done!", waitForInput: true, inputEvent: "wallMatchesTarget", tooltipText: [`"Phew, it's done!"`, `"Any other advice?"`], charAnimAfter: "question" }),
                             new Line({ text: "Well shiver me timbers, you've absolutely nailed it again! And you didn't even touch the glass, now thats an expert. (Press fast forward to go to the next level)" }),
                             new Line({ text: "Might need some touch ups on the frame, or maybe the green wall hasn't got enough coats, or the trim is off? What do you think?"}),
+                            new Line({ text: "You hit the window!! We will have to scoot! Leave the wall like it is, lets go! (Click fast forward to repeat level)", charAnim: "shame" }),
                             new Line({ text: "Cya at the next job!" })
                         ],
                         questionAtLine: [[3, 4, 1, 5], []],
-                        linesNext: [1, 2, 3, 4, -1, 3, -1]
+                        linesNext: [1, 2, 3, 4, -1, 3, -2, -1],
+                        loseLineIndex: 6
                 }
             ),
         functions: {
@@ -164,8 +166,21 @@ export const levelText = [
                         }
                     }
                 }
-                return isAllColor;
+                return { result: isAllColor, endsLevel: false };
             }
+            ,
+            paintedNoPaintArea({ allBubbles, levelTarget, levelSpecial }) {
+                let paintInWrongArea = false;
+                for (let ls of levelSpecial) {
+                    const pixel = ls.pixel;
+                    if (allBubbles[pixel].bubbleColor != rgbToString({ r: levelTarget[pixel][0], g: levelTarget[pixel][1], b: levelTarget[pixel][2] })
+                        && ls.special === "NO_DRAW" ) {
+                        paintInWrongArea = true;
+                        break;
+                    }
+                }
+                return { result: paintInWrongArea, endsLevel: true };
+            }   
         }
         ,
         colors: ["rgb(92, 116, 87)", "rgb(33, 78, 52)", "rgb(239, 183, 67)"]

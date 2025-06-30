@@ -73,6 +73,7 @@ let targetEventString = "";
 let eventString = "";
 let blockSkipButton = false;
 let lastEventCheck = 0;
+let levelFailed = false;
 const EVENT_CHECK_INTERVAL = 100;
 let levelFunctions = [];
 let lastFunctionCheck = 0;
@@ -85,6 +86,7 @@ const worker = new Worker("js/worker.js");
 let levelBackground = [];
 let levelGuideLines = [];
 let levelTarget = [];
+let levelSpecial = [];
 let isExampleShown = false;
 
 // level = window.localStorage.getItem("highestPlayerLevel");
@@ -252,6 +254,10 @@ function setupTalkArea() {
         talkSkipButton.addEventListener('click', () => {
             if (blockSkipButton) { return; }
             if (waitingForEvent && !hasTextToDisplay) { return; }
+            if ((levelText[level].textContent.nextLineTarget === -2 && !hasTextToDisplay) || levelText[level].textContent.currentLineIndex === -2) {
+                changeLevel(level, true);
+                return;
+            }
             if ((levelText[level].textContent.lineIndex == -1 || 
                 (levelText[level].textContent.nextLineTarget == -1) && levelText[level].textContent.currentLine.isLastWord)) {
                     if (level < levelText.length -1)
@@ -317,6 +323,7 @@ function changeLevel(count, absolute = false) {
     }
 
     isChangingLevel = true;
+    levelFailed = false;
 
     // setupPaintItems();
     refreshPaintItems();
@@ -340,6 +347,10 @@ function updateText() {
     const lineIndex = levelText[level].textContent.lineIndex;
     const wordIndex = lineIndex == -1 ? null : levelText[level].textContent.wordIndex;
 
+    if (levelFailed && levelText[level].textContent.currentLine.isLastWord) {
+        hasTextToDisplay = false;
+        return;
+    }
 
     // If its the first word in the line, then clear the existing text.
     // Could change this so the existing text remains but is added to the text box.
@@ -354,7 +365,6 @@ function updateText() {
     // }
 
     // Check line first once for special details like is it a question, functions etc.
-
     if (!hasDoneFirstCheck && levelText[level].textContent.currentLine != null) {
         setCharacterImage(levelText[level].textContent.currentLine.char, levelText[level].textContent.currentLine.charAnim);
         levelText[level].textContent.currentLine.wordIndex = 0;
@@ -379,6 +389,10 @@ function updateText() {
         }
     }
 
+    // if (lineIndex == -2) {
+    //     hasTextToDisplay = false;
+    //     return;
+    // }
 
     // If its the last word and last line, then all text has been displayed so end display.
     // Or if there is no more lines to display because of branching choices.
@@ -621,6 +635,19 @@ function getLevelInformation() {
                 worker.postMessage({ type: "processGuidelines", bitmap }, [bitmap])
             };
             imgGuideLines.src = guideLineSource;
+        }
+    });
+
+    const specialSource = `images/level-images/special-${level + 1}.png`;
+    fileExists(specialSource).then(exists => {
+        if (exists) {
+            const imgSpecial = new Image();
+            imgSpecial.crossOrigin = "anonymous";
+            imgSpecial.onload = async () => {
+                const bitmap = await createImageBitmap(imgSpecial);
+                worker.postMessage({ type: "processSpecial", bitmap }, [bitmap])
+            };
+            imgSpecial.src = specialSource;
         }
     });
 }
@@ -891,6 +918,10 @@ async function setupBubbles(mainFrame) {
         if (e.data.type === "targetResult") {
             levelTarget = e.data.pixelColors;
         }
+
+        if (e.data.type === "specialResult") {
+            levelSpecial = e.data.specialPixels;
+        }
     };
 
     // Get level information like background color and where shapes are on the wall.
@@ -941,7 +972,7 @@ async function setupBubbles(mainFrame) {
             for (let info of levelGuideLines) {
                 if (info.pixel === i) {
                     // console.log("shadow set on cell " + i);
-                    newBubble.style.boxShadow = `${shadowSettings[info.shadow]} #00000020`;
+                    newBubble.style.boxShadow = shadowSettings[info.shadow];
                     newBubble.style.zIndex = `${info.zIndex}`;
                     continue;
                 }
@@ -1076,12 +1107,37 @@ function tick(timestamp) {
         if (timestamp - lastFunctionCheck >= FUNCTION_CHECK_INTERVAL) {
             const context = {
                 allBubbles,
-                levelTarget
+                levelTarget,
+                levelSpecial
             }
 
             for (let funcName of levelFunctions) {
-                if (levelText[level].functions?.[funcName](context)) {
+                const res = levelText[level].functions?.[funcName](context);
+                if (res.result) {
                     eventString = funcName;
+                    if (res.endsLevel && !levelFailed) {
+                        levelFailed = true;
+                        // waitingForEvent = false;
+                        // waitingForEventPre = false;
+                        // hasTextToDisplay = true;
+                        // eventString = "";
+                        // hasDoneFirstCheck = true;
+                        
+                        talkTextArea.textContent = "";
+                        hasTextToDisplay = true;
+                        levelText[level].textContent.goToLoseLineIndex();
+                        const yesButton = document.getElementById("btnTalkYes");
+                        const noButton = document.getElementById("btnTalkNo");
+                        if (yesButton.classList.contains("fade-in")) {
+                            yesButton.classList.remove("fade-in");
+                            yesButton.classList.add("fade-out");
+                        }
+
+                        if (noButton.classList.contains("fade-in")) {
+                            noButton.classList.remove("fade-in");
+                            noButton.classList.add("fade-out");
+                        }
+                    }
                 }
             }
 
@@ -1092,7 +1148,7 @@ function tick(timestamp) {
         } 
 
         if (timestamp - lastEventCheck >= EVENT_CHECK_INTERVAL) {
-            if (eventString === levelText[level].textContent.currentLine.eventString) {
+            if (!levelFailed && eventString === levelText[level].textContent.currentLine.eventString) {
                 waitingForEvent = false;
                 waitingForEventPre = false;
                 hasTextToDisplay = true;
@@ -1166,6 +1222,7 @@ function setupResetButton(button, mainFrame) {
     //    level = 0;
 
        setupBubbles(mainFrame); 
+       setupPaints();
     });
 }
 
@@ -1212,7 +1269,7 @@ function setupPainterViewButton(button) {
         if (button.isOn) {
             halfCoverElement.classList.remove("fade-out");
             halfCoverElement.classList.add("fade-in");
-            halfCoverElement.style.zIndex = "50";
+            halfCoverElement.style.zIndex = "90";
         }
         else {
             halfCoverElement.classList.add("fade-out");

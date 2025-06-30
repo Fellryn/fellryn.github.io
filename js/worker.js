@@ -2,7 +2,7 @@ const SHADOW_VALUES = [
     { r: 14, g: 245, b: 245, shadow: "N", zIndex: 30 },
     { r: 163, g: 20, b: 239, shadow: "NE", zIndex: 20 },
     { r: 193, g: 62, b: 170, shadow: "E", zIndex: 30 },
-    { r: 154, g: 95, b: 158, shadow: "SE", zIndex: 20 },
+    { r: 154, g: 95, b: 158, shadow: "SE", zIndex: 40 },
     { r: 108, g: 145, b: 143, shadow: "S", zIndex: 30 },
     { r: 130, g: 159, b: 96, shadow: "SW", zIndex: 20 },
     { r: 192, g: 196, b: 60, shadow: "W", zIndex: 30 },

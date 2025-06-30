@@ -1614,7 +1614,6 @@ function mixRgb(c1, c2, ratio = 0.5) {
     return rgbToString(mixedColour);
 }
 
-
 function wait(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }

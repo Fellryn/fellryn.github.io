@@ -262,13 +262,14 @@ body {
 .tooltip-text {
     visibility: hidden;
     position: absolute;
-    /* left: 40%; */
+    left: 50%;
+    top: 65%;
     opacity: 0;
     background-color: rgb(248, 247, 247);
     border-radius: 10px;
     border: 3px solid white;
     transition: none;
-    transform: translateX(70px);
+    transform: translateX(-50%);
     /* transition-delay: 500ms; */
     padding: 0.5rem;
     box-shadow: 2px 2px 3px #00000050;
@@ -277,7 +278,7 @@ body {
 .talk-panel .talk-button:hover .tooltip-text{
     visibility: visible;
     opacity: 1;
-    transition: opacity 0.2s ease 300ms;
+    transition: opacity 0.2s ease 150ms;
 }
 
 

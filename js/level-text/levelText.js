@@ -46,7 +46,7 @@ export const levelText = [
                         }
                     }
                 }
-                return isAllColor;
+                return { result: isAllColor, endsLevel: false };
             }
         }
         ,
@@ -85,7 +85,7 @@ export const levelText = [
                         }
                     }
                 }
-                return isAllColor;
+                return { result: isAllColor, endsLevel: false };
             }
         }
         ,
@@ -124,7 +124,7 @@ export const levelText = [
                         }
                     }
                 }
-                return isAllColor;
+                return { result: isAllColor, endsLevel: false };
             }
         }
         ,

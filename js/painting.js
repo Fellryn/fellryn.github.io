@@ -356,6 +356,7 @@ function updateText() {
     // Could change this so the existing text remains but is added to the text box.
     if (wordIndex == 0 && lineIndex != 0) {
         talkTextArea.textContent = "";
+        blockSkipButton = false;
     }
 
     // Insert new line below version of above.
@@ -410,6 +411,8 @@ function updateText() {
     else if (levelText[level].textContent.lines[lineIndex].isLastWord && !levelText[level].textContent.isLastLine) {
         // Get the delay from the line.
         const delayBeforeNextLine = levelText[level].textContent.currentLine.delayAfterWhole;
+        blockSkipButton = true;
+
 
         // Check if its a question. If it is, then wait for a response.
         const questionInfo = levelText[level].textContent.isLineQuestion;
@@ -1346,6 +1349,8 @@ function handleMainFrameMouseMove(e) {
         debugCurrColor.textContent = `${r},${g},${b}`
 
     }
+
+    
 
     if (item != null) {
         let x = e.clientX + window.scrollX;

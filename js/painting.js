@@ -575,15 +575,15 @@ async function setupMainFrame(mainFrame) {
         handleMainFrameClick(e);
     });
 
-    document.addEventListener('mousedown', (e) => {
+    document.addEventListener('pointerdown', (e) => {
         handleMainFrameMouseDown(e);
     });
 
-    document.addEventListener('mouseup', (e) => {
+    document.addEventListener('pointerup', (e) => {
         handleMainFrameMouseUp(e);
     });
 
-    document.addEventListener('mousemove', (e) => {
+    document.addEventListener('pointermove', (e) => {
         handleMainFrameMouseMove(e);
     });
 

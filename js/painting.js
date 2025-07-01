@@ -585,7 +585,7 @@ async function setupMainFrame(mainFrame) {
 
     document.addEventListener('pointermove', (e) => {
         handleMainFrameMouseMove(e);
-    });
+    }, { passive: false });
 
     // Setup bubbles in frame.
     await setupBubbles(mainFrame);

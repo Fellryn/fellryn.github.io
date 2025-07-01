@@ -1333,6 +1333,11 @@ function handleMainFrameClick(e) {
 function handleMainFrameMouseDown(e) {
     mouseIsDown = true;
     // requestAnimationFrame(checkCollisions);
+
+    if (isExampleShown) {
+        isExampleShown = false;
+        toggleExampleOverlay(false);
+    }
 }
 
 function handleMainFrameMouseUp(e) {
@@ -1350,7 +1355,7 @@ function handleMainFrameMouseMove(e) {
 
     }
 
-    
+
 
     if (item != null) {
         let x = e.clientX + window.scrollX;
@@ -1480,15 +1485,6 @@ function checkCollisions() {
         return;
     }
 
-    // const allBubbles = document.querySelectorAll(".bubble:not(.popped)");
-    // const item = document.querySelector('.rolling-pin-middle');
-
-    if (isExampleShown) {
-        isExampleShown = false;
-        toggleExampleOverlay(false);
-    }
-
-
     const nearbyBubbles = [];
     itemRect = itemCollisionBox.getBoundingClientRect();
     // const mouseGridPosX = Math.trunc(((itemRect.left + (itemRect.width / 2)) - mainFrameRect.left) / bubbleSize) * 100 / 100;
@@ -1522,9 +1518,6 @@ function checkCollisions() {
             const saturationModifier = item.saturationLevel / MAX_SATURATION;
 
             const newColor = mixRgb(bubble.bubbleColor, currentColor, (mixModifier * saturationModifier));
-            // if (newColor.includes("NaN")) {
-            //     console.log("nan detect");
-            // }
 
             bubble.bubbleColor = newColor;
             bubble.style.backgroundColor = newColor; 

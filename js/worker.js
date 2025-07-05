@@ -60,7 +60,7 @@ onmessage = (e) => {
                     break;
                 }
             }
-            
+            //test
         }
 
         postMessage({ type: "guideLinesResult", shadowInformation });

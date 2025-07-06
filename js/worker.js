@@ -108,6 +108,7 @@ function getImageData(image) {
         const ctx = canvas.getContext("2d");
 
         ctx.drawImage(image, 0, 0);
+        ctx.imageSmoothingEnabled = false;
         
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         return data = imageData.data;

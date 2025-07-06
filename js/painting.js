@@ -607,7 +607,7 @@ function getLevelInformation() {
             const img = new Image();
             img.crossOrigin = "anonymous";
             img.onload = async () => {
-                const bitmap = await createImageBitmap(img);
+                const bitmap = await createImageBitmap(img, {premultiplyAlpha: 'none'});
                 worker.postMessage({ type: "processBackground", bitmap }, [bitmap])
             };
             img.src = imgSource;
@@ -621,7 +621,7 @@ function getLevelInformation() {
             const imgTarget = new Image();
             imgTarget.crossOrigin = "anonymous";
             imgTarget.onload = async () => {
-                const bitmap = await createImageBitmap(imgTarget);
+                const bitmap = await createImageBitmap(imgTarget, {premultiplyAlpha: 'none'});
                 worker.postMessage({ type: "processTarget", bitmap }, [bitmap])
             };
             imgTarget.src = targetSource;
@@ -634,7 +634,7 @@ function getLevelInformation() {
             const imgGuideLines = new Image(); 
             imgGuideLines.crossOrigin = "anonymous";
             imgGuideLines.onload = async () => {
-                const bitmap = await createImageBitmap(imgGuideLines);
+                const bitmap = await createImageBitmap(imgGuideLines, {premultiplyAlpha: 'none'});
                 worker.postMessage({ type: "processGuidelines", bitmap }, [bitmap])
             };
             imgGuideLines.src = guideLineSource;
@@ -647,7 +647,7 @@ function getLevelInformation() {
             const imgSpecial = new Image();
             imgSpecial.crossOrigin = "anonymous";
             imgSpecial.onload = async () => {
-                const bitmap = await createImageBitmap(imgSpecial);
+                const bitmap = await createImageBitmap(imgSpecial, {premultiplyAlpha: 'none'});
                 worker.postMessage({ type: "processSpecial", bitmap }, [bitmap])
             };
             imgSpecial.src = specialSource;
